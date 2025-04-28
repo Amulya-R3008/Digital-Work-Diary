@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">WorkDiary</string>
+    <string name="email_hint">RVCE Email</string>
+    <string name="password_hint">Password</string>
+</resources>
