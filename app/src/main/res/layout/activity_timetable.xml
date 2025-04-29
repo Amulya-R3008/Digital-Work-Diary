@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:background="@android:color/white">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal">
+
+        <!-- Back Arrow -->
+        <ImageButton
+            android:id="@+id/backButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="end"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_media_previous"
+            android:contentDescription="Back"
+            android:padding="8dp" />
+
+        <!-- Title -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Time Table"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Timetable Grid -->
+        <TableLayout
+            android:id="@+id/tableLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stretchColumns="*"
+            android:shrinkColumns="*"
+            android:background="#e0e0e0"
+            android:layout_marginBottom="24dp">
+
+            <!-- Heading Row -->
+            <TableRow android:background="#CCCCCC">
+                <TextView style="@style/TimetableCellBold" android:text="Day/Time" />
+                <TextView style="@style/TimetableCellBold" android:text="9:00-10:00" />
+                <TextView style="@style/TimetableCellBold" android:text="10:00-11:00" />
+                <TextView style="@style/TimetableCellBold" android:text="11:00-11:30" />
+                <TextView style="@style/TimetableCellBold" android:text="11:30-12:30" />
+                <TextView style="@style/TimetableCellBold" android:text="12:30-1:30" />
+                <TextView style="@style/TimetableCellBold" android:text="1:30-2:30" />
+                <TextView style="@style/TimetableCellBold" android:text="2:30-3:30" />
+                <TextView style="@style/TimetableCellBold" android:text="3:30-4:30" />
+            </TableRow>
+
+            <!-- Days Rows -->
+            <TableRow>
+                <TextView style="@style/TimetableCell" android:text="Monday" />
+                <EditText style="@style/TimetableCell" />
+                <EditText style="@style/TimetableCell" />
+                <TextView
+                    style="@style/TimetableCellMerged"
+                    android:text="B"
+                    android:gravity="center"
+                    android:layout_span="1"
+                    android:layout_height="match_parent"
+                    android:layout_rowSpan="6" />
+                <EditText style="@style/TimetableCell" />
+                <EditText style="@style/TimetableCell" />
+                <TextView
+                    style="@style/TimetableCellMerged"
+                    android:text="B"
+                    android:gravity="center"
+                    android:layout_span="1"
+                    android:layout_height="match_parent"
+                    android:layout_rowSpan="6" />
+                <EditText style="@style/TimetableCell" />
+                <EditText style="@style/TimetableCell" />
+            </TableRow>
+
+            <!-- Tuesday to Saturday Rows -->
+            <TableRow>
+                <TextView style="@style/TimetableCell" android:text="Tuesday" />
+                <EditText style="@style/TimetableCell" />
+                <EditText style="@style/TimetableCell" />
+                <TextView
+                    style="@style/TimetableCellMerged"
+                    android:text="R"
+                    android:gravity="center"
+                    android:layout_span="1"
+                    android:layout_height="match_parent"
+                    android:layout_rowSpan="6" />
+                <!-- BREAK and LUNCH cells skipped because merged above -->
+                <EditText style="@style/TimetableCell" />
+                <EditText style="@style/TimetableCell" />
+                <TextView
+                    style="@style/TimetableCellMerged"
+                    android:text="R"
+                    android:gravity="center"
+                    android:layout_span="1"
+                    android:layout_height="match_parent"
+                    android:layout_rowSpan="6" />
+                <EditText style="@style/TimetableCell" />
+                <EditText style="@style/TimetableCell" />
+            </TableRow>
+
+            <TableRow>
+                <TextView style="@style/TimetableCell" android:text="Wednesday" />
+                <EditText style="@style/TimetableCell" />
+                <EditText style="@style/TimetableCell" />
+                <TextView
+                    style="@style/TimetableCellMerged"
+                    android:text="E"
+                    android:gravity="center"
+                    android:layout_span="1"
+                    android:layout_height="match_parent"
+                    android:layout_rowSpan="6" />
+                <EditText style="@style/TimetableCell" />
+                <EditText style="@style/TimetableCell" />
+                <TextView
+                    style="@style/TimetableCellMerged"
+                    android:text="E"
+                    android:gravity="center"
+                    android:layout_span="1"
+                    android:layout_height="match_parent"
+                    android:layout_rowSpan="6" />
+                <EditText style="@style/TimetableCell" />
+                <EditText style="@style/TimetableCell" />
+            </TableRow>
+
+            <TableRow>
+                <TextView style="@style/TimetableCell" android:text="Thursday" />
+                <EditText style="@style/TimetableCell" />
+                <EditText style="@style/TimetableCell" />
+                <TextView
+                    style="@style/TimetableCellMerged"
+                    android:text="A"
+                    android:gravity="center"
+                    android:layout_span="1"
+                    android:layout_height="match_parent"
+                    android:layout_rowSpan="6" />
+                <EditText style="@style/TimetableCell" />
+                <EditText style="@style/TimetableCell" />
+                <TextView
+                    style="@style/TimetableCellMerged"
+                    android:text="A"
+                    android:gravity="center"
+                    android:layout_span="1"
+                    android:layout_height="match_parent"
+                    android:layout_rowSpan="6" />
+                <EditText style="@style/TimetableCell" />
+                <EditText style="@style/TimetableCell" />
+            </TableRow>
+
+            <TableRow>
+                <TextView style="@style/TimetableCell" android:text="Friday" />
+                <EditText style="@style/TimetableCell" />
+                <EditText style="@style/TimetableCell" />
+                <TextView
+                    style="@style/TimetableCellMerged"
+                    android:text="K"
+                    android:gravity="center"
+                    android:layout_span="1"
+                    android:layout_height="match_parent"
+                    android:layout_rowSpan="6" />
+                <EditText style="@style/TimetableCell" />
+                <EditText style="@style/TimetableCell" />
+                <TextView
+                    style="@style/TimetableCellMerged"
+                    android:text="K"
+                    android:gravity="center"
+                    android:layout_span="1"
+                    android:layout_height="match_parent"
+                    android:layout_rowSpan="6" />
+                <EditText style="@style/TimetableCell" />
+                <EditText style="@style/TimetableCell" />
+            </TableRow>
+
+            <TableRow>
+                <TextView style="@style/TimetableCell" android:text="Saturday" />
+                <EditText style="@style/TimetableCell" />
+                <EditText style="@style/TimetableCell" />
+
+                <EditText style="@style/TimetableCell" />
+                <EditText style="@style/TimetableCell" />
+
+                <EditText style="@style/TimetableCell" />
+                <EditText style="@style/TimetableCell" />
+            </TableRow>
+        </TableLayout>
+
+        <!-- Buttons -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_marginBottom="24dp">
+
+            <Button
+                android:id="@+id/editButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Edit"
+                android:layout_marginEnd="16dp" />
+
+            <Button
+                android:id="@+id/saveButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Save" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

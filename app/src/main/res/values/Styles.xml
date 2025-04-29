@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Header cell style for top headings -->
+    <style name="HeaderCellStyle">
+        <item name="android:padding">8dp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:background">#EFEFEF</item>
+    </style>
+
+    <!-- First column (Day) style -->
+    <style name="DayCellStyle">
+        <item name="android:padding">8dp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:background">#FAFAFA</item>
+    </style>
+
+    <!-- Editable normal cell -->
+    <style name="CellInputStyle">
+        <item name="android:background">#FFFFFF</item>
+        <item name="android:padding">4dp</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <!-- Break and Lunch Break cells -->
+    <style name="BreakCellStyle">
+        <item name="android:background">#FFD700</item> <!-- Yellow color -->
+        <item name="android:gravity">center</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">#000000</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="TableHeader">
+        <item name="android:padding">8dp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:background">#1976D2</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="TableCell">
+        <item name="android:padding">6dp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:gravity">center</item>
+        <item name="android:background">#EEEEEE</item>
+    </style>
+
+    <style name="TableCellEdit">
+        <item name="android:padding">4dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:background">#F5F5F5</item>
+        <item name="android:inputType">text</item>
+    </style>
+
+    <style name="EmptyCell">
+        <item name="android:background">#FFFFFF</item>
+        <item name="android:layout_width">50dp</item>
+        <item name="android:layout_height">match_parent</item>
+    </style>
+
+    <style name="TimetableCell">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:padding">8dp</item>
+        <item name="android:background">#FFFFFF</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="TimetableCellBold" parent="TimetableCell">
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TimetableCellMerged" parent="TimetableCell">
+        <item name="android:background">#F5F5F5</item>
+        <item name="android:textColor">#000000</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+
+
+
+</resources>
