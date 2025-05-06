@@ -32,6 +32,10 @@ dependencies {
     // Parse SDK for Android
     implementation 'com.github.parse-community.Parse-SDK-Android:parse:4.0.0'
 
+    implementation 'com.google.android.material:material:1.11.0' // or latest
+
+    implementation 'androidx.viewpager2:viewpager2:1.0.0'
+
     implementation libs.appcompat
     implementation libs.material
     implementation libs.activity
