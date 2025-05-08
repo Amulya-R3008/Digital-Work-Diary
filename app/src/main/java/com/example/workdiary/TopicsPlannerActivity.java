@@ -3,9 +3,9 @@ package com.example.workdiary;
 import android.os.Bundle;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
-import androidx.viewpager2.widget.ViewPager2;
 import com.parse.ParseQuery;
 import com.parse.ParseObject;
 import com.parse.ParseUser;
@@ -25,13 +25,11 @@ public class TopicsPlannerActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_topics_planner); // Make sure this is your correct layout
+        setContentView(R.layout.activity_topics_planner);
 
-        // Initialize UI elements
         tabLayout = findViewById(R.id.tabLayout);
         viewPager = findViewById(R.id.viewPager);
 
-        // Fetch user's timetable from Back4App
         fetchTimetableData();
     }
 
@@ -54,7 +52,6 @@ public class TopicsPlannerActivity extends AppCompatActivity {
 
     private List<String> extractSubjectsFromCells(ParseObject timetableObject) {
         Set<String> subjectSet = new HashSet<>();
-
         for (String key : timetableObject.keySet()) {
             if (key.startsWith("cell_")) {
                 String subject = timetableObject.getString(key);
@@ -63,14 +60,12 @@ public class TopicsPlannerActivity extends AppCompatActivity {
                 }
             }
         }
-
         return new ArrayList<>(subjectSet);
     }
 
     private void setupViewPager() {
         adapter = new TopicPlannerAdapter(this, subjectsList);
         viewPager.setAdapter(adapter);
-
         new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
             tab.setText(subjectsList.get(position));
         }).attach();

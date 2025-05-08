@@ -1,78 +1,110 @@
 package com.example.workdiary;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.parse.FindCallback;
-import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
-
-import java.util.List;
+import com.parse.ParseUser;
 
 public class TopicPlannerFragment extends Fragment {
 
-    private String subjectName;
+    private static final String TAG = "TopicPlannerFragment";
 
+    private EditText courseTitleEditText, totalHoursEditText, seeMarksEditText,
+            semesterEditText, courseCodeEditText, creditsEditText, cieMarksEditText, academicYearEditText;
+
+    @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_topic_planner, container, false);
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
 
-        // Get the subject name passed from the MainActivity
-        subjectName = getArguments().getString("subjectName");
+        View rootView = inflater.inflate(R.layout.fragment_topic_planner, container, false);
 
-        // Set the subject name dynamically in the layout
-        TextView subjectTextView = view.findViewById(R.id.subjectNameTextView);
-        subjectTextView.setText(subjectName);
+        // Set faculty name from ParseUser
+        TextView facultyNameTextView = rootView.findViewById(R.id.facultyName);
+        ParseUser currentUser = ParseUser.getCurrentUser();
+        if (currentUser != null) {
+            String facultyName = currentUser.getString("name"); // 'name' field in _User class
+            if (facultyName != null && !facultyName.isEmpty()) {
+                facultyNameTextView.setText("Faculty: " + facultyName);
+            } else {
+                facultyNameTextView.setText("Faculty: Name not available");
+            }
+        } else {
+            facultyNameTextView.setText("Faculty: Not logged in");
+        }
 
-        // Optionally, fetch topics and other details for this subject from Back4App
-        fetchTopicPlannerData(view);
+        // Initialize EditTexts
+        courseTitleEditText = rootView.findViewById(R.id.courseTitle);
+        totalHoursEditText = rootView.findViewById(R.id.totalHours);
+        seeMarksEditText = rootView.findViewById(R.id.seeMarks);
+        semesterEditText = rootView.findViewById(R.id.semester);
+        courseCodeEditText = rootView.findViewById(R.id.courseCode);
+        creditsEditText = rootView.findViewById(R.id.credits);
+        cieMarksEditText = rootView.findViewById(R.id.cieMarks);
+        academicYearEditText = rootView.findViewById(R.id.academicYear); // User input only
 
-        return view;
+        fetchSubjectMetadata();
+
+        // You can also initialize TableLayout, buttons, etc. here as needed
+
+        return rootView;
     }
 
-    // Fetch topic planner data (topics, weeks, etc.) for the subject
-    private void fetchTopicPlannerData(View view) {
-        ParseQuery<ParseObject> query = ParseQuery.getQuery("TopicPlanner");
-        query.whereEqualTo("subjectName", subjectName); // Get data for the specific subject
+    private void fetchSubjectMetadata() {
+        Bundle args = getArguments();
+        if (args == null || !args.containsKey("subjectName")) {
+            Toast.makeText(getContext(), "Missing subject name", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "No subjectName passed in arguments");
+            return;
+        }
 
-        query.findInBackground(new FindCallback<ParseObject>() {
-            @Override
-            public void done(List<ParseObject> topicList, ParseException e) {
-                if (e == null) {
-                    // Populate the topic planner (e.g., weeks, topics, Bloom's Taxonomy)
-                    displayTopicPlannerData(view, topicList);
+        String subjectName = args.getString("subjectName");
+        Log.d(TAG, "Fetching metadata for subject: " + subjectName);
+
+        ParseQuery<ParseObject> query = ParseQuery.getQuery("SubjectInfo");
+        query.whereEqualTo("subjectName", subjectName);
+
+        query.findInBackground((objects, e) -> {
+            if (e == null) {
+                if (objects != null && !objects.isEmpty()) {
+                    ParseObject subject = objects.get(0);
+
+                    if (subject.getString("subjectName") != null)
+                        courseTitleEditText.setText(subject.getString("subjectName"));
+                    if (subject.getString("totalHours") != null)
+                        totalHoursEditText.setText(subject.getString("totalHours"));
+                    if (subject.getString("seeMarks") != null)
+                        seeMarksEditText.setText(subject.getString("seeMarks"));
+                    if (subject.getString("semester") != null)
+                        semesterEditText.setText(subject.getString("semester"));
+                    if (subject.getString("courseCode") != null)
+                        courseCodeEditText.setText(subject.getString("courseCode"));
+                    if (subject.getString("credits") != null)
+                        creditsEditText.setText(subject.getString("credits"));
+                    if (subject.getString("cieMarks") != null)
+                        cieMarksEditText.setText(subject.getString("cieMarks"));
+                    // academicYearEditText is for user entry only, do not set
                 } else {
-                    Toast.makeText(getActivity(), "Error fetching topics", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "No subjects found for: " + subjectName);
+                    Toast.makeText(getContext(), "No matching subject found", Toast.LENGTH_LONG).show();
                 }
+            } else {
+                Log.e(TAG, "Error fetching subject: " + e.getMessage());
+                Toast.makeText(getContext(), "Failed to fetch subject metadata", Toast.LENGTH_LONG).show();
             }
         });
     }
-
-    // Display the topic planner data dynamically
-    private void displayTopicPlannerData(View view, List<ParseObject> topicList) {
-        // You can now iterate over topicList and fill your views with data
-        // For example, using a TableLayout or other layouts to display topics
-
-        for (ParseObject topic : topicList) {
-            String week = topic.getString("week");
-            String days = topic.getString("days");
-            String unit = topic.getString("unit");
-            String subTopic = topic.getString("subTopic");
-            String bloomLevel = topic.getString("bloomLevel");
-            String courseOutcomes = topic.getString("courseOutcomes");
-
-            // You can now populate a dynamic TableRow or any other layout for each topic
-            // For example, you can add TextViews dynamically in a TableLayout for each topic
-        }
-    }
 }
-

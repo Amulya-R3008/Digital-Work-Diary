@@ -1,25 +1,150 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp">
 
-    <TextView
-        android:id="@+id/subjectNameTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Subject Name"
-        android:textSize="20sp"
-        android:textStyle="bold"/>
-
-    <!-- Add the table for the topic planner (e.g., weeks, topics, Bloom's Taxonomy, etc.) -->
-    <TableLayout
-        android:id="@+id/topicTable"
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:stretchColumns="*"
-        android:layout_marginTop="16dp">
-        <!-- Dynamically added TableRows will go here -->
-    </TableLayout>
-</LinearLayout>
+        android:layout_height="wrap_content">
+
+        <!-- Top Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingBottom="8dp">
+
+            <TextView
+                android:id="@+id/facultyName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Faculty: "
+                android:textStyle="bold" />
+
+            <ImageView
+                android:id="@+id/logo"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@drawable/rv_logo"
+                android:layout_gravity="center" />
+
+            <TextView
+                android:id="@+id/department"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="end"
+                android:text="Department of MCA"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Info section with editable fields -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="2"
+            android:padding="8dp">
+
+            <!-- Left Column -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:paddingEnd="8dp">
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Course Title"/>
+                <EditText android:id="@+id/courseTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="text"/>
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Total Hours"/>
+                <EditText android:id="@+id/totalHours" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="number"/>
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="SEE Marks"/>
+                <EditText android:id="@+id/seeMarks" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="number"/>
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Semester"/>
+                <EditText android:id="@+id/semester" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="text"/>
+            </LinearLayout>
+
+            <!-- Right Column -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:paddingStart="8dp">
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Course Code"/>
+                <EditText android:id="@+id/courseCode" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="text"/>
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Credits"/>
+                <EditText android:id="@+id/credits" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="text"/>
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CIE Marks"/>
+                <EditText android:id="@+id/cieMarks" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="number"/>
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Academic Year"/>
+                <EditText android:id="@+id/academicYear" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="text"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Table Header -->
+        <TableLayout
+            android:id="@+id/topicTable"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stretchColumns="*"
+            android:layout_marginTop="16dp">
+
+            <TableRow android:background="#CCCCCC">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Week" android:padding="8dp" android:textStyle="bold"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Days" android:padding="8dp" android:textStyle="bold"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Unit: Main Topic" android:padding="8dp" android:textStyle="bold"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Sub Topic" android:padding="8dp" android:textStyle="bold"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Bloom's Taxonomy Level(L)" android:padding="8dp" android:textStyle="bold"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Course Outcomes(CO)" android:padding="8dp" android:textStyle="bold"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Activity" android:padding="8dp" android:textStyle="bold"/>
+            </TableRow>
+        </TableLayout>
+
+        <!-- Add/Delete Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="16dp"
+            android:weightSum="2">
+
+            <Button
+                android:id="@+id/addRowButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Add Row"
+                android:layout_marginEnd="8dp" />
+
+            <Button
+                android:id="@+id/deleteRowButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Delete Row"
+                android:layout_marginStart="8dp" />
+        </LinearLayout>
+
+        <!-- Save Button -->
+        <Button
+            android:id="@+id/saveButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Save"
+            android:layout_gravity="end"
+            android:layout_marginTop="16dp"/>
+    </LinearLayout>
+</ScrollView>
