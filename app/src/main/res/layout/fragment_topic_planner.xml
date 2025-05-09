@@ -136,7 +136,8 @@
                 <TableRow android:background="#CCCCCC">
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Week" android:padding="8dp" android:textStyle="bold"/>
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Days" android:padding="8dp" android:textStyle="bold"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Unit: Main Topic" android:padding="8dp" android:textStyle="bold"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Unit" android:padding="8dp" android:textStyle="bold"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Main Topic" android:padding="8dp" android:textStyle="bold"/>
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Sub Topic" android:padding="8dp" android:textStyle="bold"/>
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Bloom's Taxonomy Level(L)" android:padding="8dp" android:textStyle="bold"/>
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Course Outcomes(CO)" android:padding="8dp" android:textStyle="bold"/>

@@ -29,6 +29,7 @@ public class TopicPlannerFragment extends Fragment {
 
     private List<String> weekList, dayList, bloomList, coList, activityList;
     private List<UnitMainTopic> unitMainTopicList = new ArrayList<>();
+    private boolean unitsLoaded = false;
 
     private static class UnitMainTopic {
         String unit;
@@ -79,7 +80,13 @@ public class TopicPlannerFragment extends Fragment {
 
         fetchSubjectMetadataAndUnits();
 
-        addRowButton.setOnClickListener(v -> addTableRow());
+        addRowButton.setOnClickListener(v -> {
+            if (!unitsLoaded || unitMainTopicList.isEmpty()) {
+                Toast.makeText(getContext(), "Please wait, units are still loading...", Toast.LENGTH_SHORT).show();
+            } else {
+                addTableRow();
+            }
+        });
         deleteRowButton.setOnClickListener(v -> deleteLastTableRow());
 
         return rootView;
@@ -116,9 +123,12 @@ public class TopicPlannerFragment extends Fragment {
                 if (subject.getString("cieMarks") != null)
                     cieMarksEditText.setText(subject.getString("cieMarks"));
 
-                String unitsJson = subject.getString("units");
-                if (unitsJson != null) {
-                    parseUnitsJson(unitsJson);
+                JSONArray unitsArray = subject.getJSONArray("units");
+                Log.d(TAG, "unitsArray: " + unitsArray); // Debug log
+                if (unitsArray != null && unitsArray.length() > 0) {
+                    parseUnitsArray(unitsArray);
+                    unitsLoaded = true;
+                    requireActivity().runOnUiThread(this::addTableRow); // Add the first row automatically
                 }
             } else {
                 Log.e(TAG, "Error fetching subject: " + (e != null ? e.getMessage() : "No data"));
@@ -127,17 +137,22 @@ public class TopicPlannerFragment extends Fragment {
         });
     }
 
-    private void parseUnitsJson(String unitsJson) {
+    // Use this instead of parseUnitsJson
+    private void parseUnitsArray(JSONArray unitsArray) {
         unitMainTopicList.clear();
         try {
-            JSONArray unitsArray = new JSONArray(unitsJson);
             for (int i = 0; i < unitsArray.length(); i++) {
                 JSONObject unitObj = unitsArray.getJSONObject(i);
                 String unit = unitObj.getString("unit");
                 List<String> mainTopics = new ArrayList<>();
-                JSONArray mainTopicArray = unitObj.getJSONArray("main topic");
-                for (int j = 0; j < mainTopicArray.length(); j++) {
-                    mainTopics.add(mainTopicArray.getString(j));
+                Object mainTopicObj = unitObj.get("main topic");
+                if (mainTopicObj instanceof JSONArray) {
+                    JSONArray mainTopicArray = (JSONArray) mainTopicObj;
+                    for (int j = 0; j < mainTopicArray.length(); j++) {
+                        mainTopics.add(mainTopicArray.getString(j));
+                    }
+                } else if (mainTopicObj instanceof String) {
+                    mainTopics.add((String) mainTopicObj);
                 }
                 List<String> topics = new ArrayList<>();
                 JSONArray topicArray = unitObj.getJSONArray("topic");
@@ -152,7 +167,7 @@ public class TopicPlannerFragment extends Fragment {
     }
 
     private void addTableRow() {
-        if (getContext() == null) return;
+        if (getContext() == null || unitMainTopicList.isEmpty()) return;
         LayoutInflater inflater = LayoutInflater.from(getContext());
         TableRow row = (TableRow) inflater.inflate(R.layout.table_row_topic, topicTable, false);
 
@@ -162,21 +177,44 @@ public class TopicPlannerFragment extends Fragment {
         Spinner daySpinner = row.findViewById(R.id.spinnerDay);
         daySpinner.setAdapter(new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, dayList));
 
-        Spinner unitMainTopicSpinner = row.findViewById(R.id.spinnerUnitMainTopic);
-        List<String> unitMainTopicOptions = new ArrayList<>();
-        for (UnitMainTopic umt : unitMainTopicList) {
-            for (String mt : umt.mainTopics) {
-                unitMainTopicOptions.add(umt.unit + " - " + mt);
-            }
-        }
-        unitMainTopicSpinner.setAdapter(new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, unitMainTopicOptions));
-
+        Spinner unitSpinner = row.findViewById(R.id.spinnerUnit);
+        Spinner mainTopicSpinner = row.findViewById(R.id.spinnerMainTopic);
         Spinner subTopicSpinner = row.findViewById(R.id.spinnerSubTopic);
-        List<String> allTopics = new ArrayList<>();
+
+        // Populate unit spinner
+        List<String> unitNames = new ArrayList<>();
         for (UnitMainTopic umt : unitMainTopicList) {
-            allTopics.addAll(umt.topics);
+            unitNames.add(umt.unit);
         }
-        subTopicSpinner.setAdapter(new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, allTopics));
+        ArrayAdapter<String> unitAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, unitNames);
+        unitAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        unitSpinner.setAdapter(unitAdapter);
+
+        // Listener: when unit changes, update main topic and sub topic
+        unitSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (position < 0 || position >= unitMainTopicList.size()) return;
+                UnitMainTopic selectedUnit = unitMainTopicList.get(position);
+
+                ArrayAdapter<String> mainTopicAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, selectedUnit.mainTopics);
+                mainTopicAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                mainTopicSpinner.setAdapter(mainTopicAdapter);
+
+                ArrayAdapter<String> subTopicAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, selectedUnit.topics);
+                subTopicAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                subTopicSpinner.setAdapter(subTopicAdapter);
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
+        // Set initial main topic and sub topic for the first unit
+        if (!unitMainTopicList.isEmpty()) {
+            UnitMainTopic firstUnit = unitMainTopicList.get(0);
+            mainTopicSpinner.setAdapter(new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, firstUnit.mainTopics));
+            subTopicSpinner.setAdapter(new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, firstUnit.topics));
+        }
 
         Spinner bloomSpinner = row.findViewById(R.id.spinnerBloom);
         bloomSpinner.setAdapter(new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, bloomList));
