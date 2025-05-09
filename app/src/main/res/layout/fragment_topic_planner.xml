@@ -10,6 +10,31 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
+        <!-- Header -->
+        <TextView
+            android:id="@+id/headerTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Topic Planner"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_gravity="center"
+            android:padding="8dp" />
+
+        <!-- TabLayout for Subjects -->
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tabLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:tabGravity="fill"
+            app:tabMode="scrollable" />
+
+        <!-- ViewPager2 for switching between subject planners -->
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/viewPager"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
         <!-- Top Row -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -94,24 +119,32 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Table Header -->
-        <TableLayout
-            android:id="@+id/topicTable"
+        <!-- Table Header and Rows with Horizontal Scroll -->
+        <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:stretchColumns="*"
+            android:fillViewport="true"
+            android:scrollbars="horizontal"
             android:layout_marginTop="16dp">
 
-            <TableRow android:background="#CCCCCC">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Week" android:padding="8dp" android:textStyle="bold"/>
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Days" android:padding="8dp" android:textStyle="bold"/>
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Unit: Main Topic" android:padding="8dp" android:textStyle="bold"/>
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Sub Topic" android:padding="8dp" android:textStyle="bold"/>
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Bloom's Taxonomy Level(L)" android:padding="8dp" android:textStyle="bold"/>
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Course Outcomes(CO)" android:padding="8dp" android:textStyle="bold"/>
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Activity" android:padding="8dp" android:textStyle="bold"/>
-            </TableRow>
-        </TableLayout>
+            <TableLayout
+                android:id="@+id/topicTable"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:stretchColumns="*">
+
+                <TableRow android:background="#CCCCCC">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Week" android:padding="8dp" android:textStyle="bold"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Days" android:padding="8dp" android:textStyle="bold"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Unit: Main Topic" android:padding="8dp" android:textStyle="bold"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Sub Topic" android:padding="8dp" android:textStyle="bold"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Bloom's Taxonomy Level(L)" android:padding="8dp" android:textStyle="bold"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Course Outcomes(CO)" android:padding="8dp" android:textStyle="bold"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Activity" android:padding="8dp" android:textStyle="bold"/>
+                </TableRow>
+            </TableLayout>
+        </HorizontalScrollView>
+
 
         <!-- Add/Delete Buttons -->
         <LinearLayout

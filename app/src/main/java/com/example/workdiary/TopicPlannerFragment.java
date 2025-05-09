@@ -27,11 +27,9 @@ public class TopicPlannerFragment extends Fragment {
     private TableLayout topicTable;
     private Button addRowButton, deleteRowButton;
 
-    // Data for dropdowns
-    private List<String> weekList, dayList, bloomList, coList;
+    private List<String> weekList, dayList, bloomList, coList, activityList;
     private List<UnitMainTopic> unitMainTopicList = new ArrayList<>();
 
-    // Helper class for unit/main topic/topic
     private static class UnitMainTopic {
         String unit;
         List<String> mainTopics;
@@ -45,26 +43,19 @@ public class TopicPlannerFragment extends Fragment {
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
         View rootView = inflater.inflate(R.layout.fragment_topic_planner, container, false);
 
-        // Set faculty name from ParseUser
         TextView facultyNameTextView = rootView.findViewById(R.id.facultyName);
         ParseUser currentUser = ParseUser.getCurrentUser();
         if (currentUser != null) {
             String facultyName = currentUser.getString("name");
-            if (facultyName != null && !facultyName.isEmpty()) {
-                facultyNameTextView.setText("Faculty: " + facultyName);
-            } else {
-                facultyNameTextView.setText("Faculty: Name not available");
-            }
+            facultyNameTextView.setText(facultyName != null && !facultyName.isEmpty() ? "Faculty: " + facultyName : "Faculty: Name not available");
         } else {
             facultyNameTextView.setText("Faculty: Not logged in");
         }
 
-        // Initialize EditTexts
         courseTitleEditText = rootView.findViewById(R.id.courseTitle);
         totalHoursEditText = rootView.findViewById(R.id.totalHours);
         seeMarksEditText = rootView.findViewById(R.id.seeMarks);
@@ -78,15 +69,14 @@ public class TopicPlannerFragment extends Fragment {
         addRowButton = rootView.findViewById(R.id.addRowButton);
         deleteRowButton = rootView.findViewById(R.id.deleteRowButton);
 
-        // Set up dropdown data
         weekList = new ArrayList<>();
         for (int i = 1; i <= 20; i++) weekList.add(String.valueOf(i));
         dayList = new ArrayList<>();
         for (int i = 1; i <= 140; i++) dayList.add(String.valueOf(i));
         bloomList = Arrays.asList("L1", "L2", "L3", "L4", "L5");
         coList = Arrays.asList("CO1", "CO2", "CO3", "CO4", "CO5");
+        activityList = Arrays.asList("Google Classroom", "Quiz", "QuickLearn", "Presentation");
 
-        // Fetch subject info and units JSON
         fetchSubjectMetadataAndUnits();
 
         addRowButton.setOnClickListener(v -> addTableRow());
@@ -95,7 +85,6 @@ public class TopicPlannerFragment extends Fragment {
         return rootView;
     }
 
-    // Fetch subject info and units JSON
     private void fetchSubjectMetadataAndUnits() {
         Bundle args = getArguments();
         if (args == null || !args.containsKey("subjectName")) {
@@ -112,7 +101,6 @@ public class TopicPlannerFragment extends Fragment {
             if (e == null && objects != null && !objects.isEmpty()) {
                 ParseObject subject = objects.get(0);
 
-                // Set metadata fields
                 if (subject.getString("subjectName") != null)
                     courseTitleEditText.setText(subject.getString("subjectName"));
                 if (subject.getString("totalHours") != null)
@@ -128,7 +116,6 @@ public class TopicPlannerFragment extends Fragment {
                 if (subject.getString("cieMarks") != null)
                     cieMarksEditText.setText(subject.getString("cieMarks"));
 
-                // Parse units JSON for dropdowns
                 String unitsJson = subject.getString("units");
                 if (unitsJson != null) {
                     parseUnitsJson(unitsJson);
@@ -140,7 +127,6 @@ public class TopicPlannerFragment extends Fragment {
         });
     }
 
-    // Parse the units JSON and populate unitMainTopicList
     private void parseUnitsJson(String unitsJson) {
         unitMainTopicList.clear();
         try {
@@ -165,25 +151,17 @@ public class TopicPlannerFragment extends Fragment {
         }
     }
 
-    // Add a new TableRow with Spinners and EditText
     private void addTableRow() {
         if (getContext() == null) return;
         LayoutInflater inflater = LayoutInflater.from(getContext());
-        TableRow row = (TableRow) inflater.inflate(R.layout.table_row_topic, null);
+        TableRow row = (TableRow) inflater.inflate(R.layout.table_row_topic, topicTable, false);
 
-        // Week Spinner
         Spinner weekSpinner = row.findViewById(R.id.spinnerWeek);
-        ArrayAdapter<String> weekAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, weekList);
-        weekAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        weekSpinner.setAdapter(weekAdapter);
+        weekSpinner.setAdapter(new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, weekList));
 
-        // Day Spinner
         Spinner daySpinner = row.findViewById(R.id.spinnerDay);
-        ArrayAdapter<String> dayAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, dayList);
-        dayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        daySpinner.setAdapter(dayAdapter);
+        daySpinner.setAdapter(new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, dayList));
 
-        // Unit/Main Topic Spinner (shows "Unit - Main Topic")
         Spinner unitMainTopicSpinner = row.findViewById(R.id.spinnerUnitMainTopic);
         List<String> unitMainTopicOptions = new ArrayList<>();
         for (UnitMainTopic umt : unitMainTopicList) {
@@ -191,41 +169,32 @@ public class TopicPlannerFragment extends Fragment {
                 unitMainTopicOptions.add(umt.unit + " - " + mt);
             }
         }
-        ArrayAdapter<String> unitMainTopicAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, unitMainTopicOptions);
-        unitMainTopicAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        unitMainTopicSpinner.setAdapter(unitMainTopicAdapter);
+        unitMainTopicSpinner.setAdapter(new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, unitMainTopicOptions));
 
-        // Sub Topic Spinner (shows all topics)
         Spinner subTopicSpinner = row.findViewById(R.id.spinnerSubTopic);
         List<String> allTopics = new ArrayList<>();
         for (UnitMainTopic umt : unitMainTopicList) {
             allTopics.addAll(umt.topics);
         }
-        ArrayAdapter<String> subTopicAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, allTopics);
-        subTopicAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        subTopicSpinner.setAdapter(subTopicAdapter);
+        subTopicSpinner.setAdapter(new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, allTopics));
 
-        // Bloom's Taxonomy Spinner
         Spinner bloomSpinner = row.findViewById(R.id.spinnerBloom);
-        ArrayAdapter<String> bloomAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, bloomList);
-        bloomAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        bloomSpinner.setAdapter(bloomAdapter);
+        bloomSpinner.setAdapter(new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, bloomList));
 
-        // CO Spinner
         Spinner coSpinner = row.findViewById(R.id.spinnerCO);
-        ArrayAdapter<String> coAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, coList);
-        coAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        coSpinner.setAdapter(coAdapter);
+        coSpinner.setAdapter(new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, coList));
 
-        // Activity EditText is already present in the row
+        Spinner activitySpinner = row.findViewById(R.id.spinnerActivity);
+        ArrayAdapter<String> activityAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, activityList);
+        activityAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        activitySpinner.setAdapter(activityAdapter);
 
         topicTable.addView(row);
     }
 
-    // Delete the last added TableRow (not the header)
     private void deleteLastTableRow() {
         int childCount = topicTable.getChildCount();
-        if (childCount > 1) { // Keep header row
+        if (childCount > 1) {
             topicTable.removeViewAt(childCount - 1);
         }
     }
