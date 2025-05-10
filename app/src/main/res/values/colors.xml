@@ -5,4 +5,8 @@
     <color name="primary_color">#2E7D32</color>
     <color name="secondary_color">#0277BD</color>
     <color name="grey_600">#757575</color>
+    <color name="editBlue">#1976D2</color>
+    <color name="colorPrimary">#1976D2</color>
+    <color name="teal_700">#00796B</color>
+
 </resources>
