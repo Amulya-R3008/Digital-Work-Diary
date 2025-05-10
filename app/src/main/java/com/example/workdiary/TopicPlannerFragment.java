@@ -1,6 +1,7 @@
 package com.example.workdiary;
 
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.*;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
@@ -28,17 +30,30 @@ public class TopicPlannerFragment extends Fragment {
     private Button addRowButton, deleteRowButton;
 
     private List<String> weekList, dayList, bloomList, coList, activityList;
-    private List<UnitMainTopic> unitMainTopicList = new ArrayList<>();
+    private List<UnitData> unitDataList = new ArrayList<>();
     private boolean unitsLoaded = false;
+    private Map<String, Integer> unitAssignedCount = new HashMap<>();
 
-    private static class UnitMainTopic {
+    // Data classes
+    private static class UnitData {
         String unit;
-        List<String> mainTopics;
-        List<String> topics;
-        UnitMainTopic(String unit, List<String> mainTopics, List<String> topics) {
+        int hours;
+        List<MainTopic> mainTopics;
+        List<String> subtopics; // Only for units with no main topics
+        UnitData(String unit, int hours, List<MainTopic> mainTopics, List<String> subtopics) {
             this.unit = unit;
+            this.hours = hours;
             this.mainTopics = mainTopics;
-            this.topics = topics;
+            this.subtopics = subtopics;
+        }
+    }
+
+    private static class MainTopic {
+        String name;
+        List<String> subtopics;
+        MainTopic(String name, List<String> subtopics) {
+            this.name = name;
+            this.subtopics = subtopics;
         }
     }
 
@@ -81,7 +96,7 @@ public class TopicPlannerFragment extends Fragment {
         fetchSubjectMetadataAndUnits();
 
         addRowButton.setOnClickListener(v -> {
-            if (!unitsLoaded || unitMainTopicList.isEmpty()) {
+            if (!unitsLoaded || unitDataList.isEmpty()) {
                 Toast.makeText(getContext(), "Please wait, units are still loading...", Toast.LENGTH_SHORT).show();
             } else {
                 addTableRow();
@@ -122,13 +137,14 @@ public class TopicPlannerFragment extends Fragment {
                     creditsEditText.setText(subject.getString("credits"));
                 if (subject.getString("cieMarks") != null)
                     cieMarksEditText.setText(subject.getString("cieMarks"));
+                if (subject.getString("academicYear") != null)
+                    academicYearEditText.setText(subject.getString("academicYear"));
 
                 JSONArray unitsArray = subject.getJSONArray("units");
-                Log.d(TAG, "unitsArray: " + unitsArray); // Debug log
                 if (unitsArray != null && unitsArray.length() > 0) {
                     parseUnitsArray(unitsArray);
                     unitsLoaded = true;
-                    requireActivity().runOnUiThread(this::addTableRow); // Add the first row automatically
+                    requireActivity().runOnUiThread(this::addTableRow);
                 }
             } else {
                 Log.e(TAG, "Error fetching subject: " + (e != null ? e.getMessage() : "No data"));
@@ -137,29 +153,36 @@ public class TopicPlannerFragment extends Fragment {
         });
     }
 
-    // Use this instead of parseUnitsJson
     private void parseUnitsArray(JSONArray unitsArray) {
-        unitMainTopicList.clear();
+        unitDataList.clear();
         try {
             for (int i = 0; i < unitsArray.length(); i++) {
                 JSONObject unitObj = unitsArray.getJSONObject(i);
                 String unit = unitObj.getString("unit");
-                List<String> mainTopics = new ArrayList<>();
-                Object mainTopicObj = unitObj.get("main topic");
-                if (mainTopicObj instanceof JSONArray) {
-                    JSONArray mainTopicArray = (JSONArray) mainTopicObj;
-                    for (int j = 0; j < mainTopicArray.length(); j++) {
-                        mainTopics.add(mainTopicArray.getString(j));
+                int hours = unitObj.optInt("hours", 0);
+
+                List<MainTopic> mainTopics = new ArrayList<>();
+                if (unitObj.has("mainTopics")) {
+                    JSONArray mainTopicsArray = unitObj.getJSONArray("mainTopics");
+                    for (int j = 0; j < mainTopicsArray.length(); j++) {
+                        JSONObject mtObj = mainTopicsArray.getJSONObject(j);
+                        String name = mtObj.getString("name");
+                        List<String> subtopics = new ArrayList<>();
+                        JSONArray subtopicsArray = mtObj.getJSONArray("subtopics");
+                        for (int k = 0; k < subtopicsArray.length(); k++) {
+                            subtopics.add(subtopicsArray.getString(k));
+                        }
+                        mainTopics.add(new MainTopic(name, subtopics));
                     }
-                } else if (mainTopicObj instanceof String) {
-                    mainTopics.add((String) mainTopicObj);
                 }
-                List<String> topics = new ArrayList<>();
-                JSONArray topicArray = unitObj.getJSONArray("topic");
-                for (int j = 0; j < topicArray.length(); j++) {
-                    topics.add(topicArray.getString(j));
+                List<String> subtopics = new ArrayList<>();
+                if (unitObj.has("subtopics")) {
+                    JSONArray subtopicsArray = unitObj.getJSONArray("subtopics");
+                    for (int j = 0; j < subtopicsArray.length(); j++) {
+                        subtopics.add(subtopicsArray.getString(j));
+                    }
                 }
-                unitMainTopicList.add(new UnitMainTopic(unit, mainTopics, topics));
+                unitDataList.add(new UnitData(unit, hours, mainTopics, subtopics));
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -167,7 +190,7 @@ public class TopicPlannerFragment extends Fragment {
     }
 
     private void addTableRow() {
-        if (getContext() == null || unitMainTopicList.isEmpty()) return;
+        if (getContext() == null || unitDataList.isEmpty()) return;
         LayoutInflater inflater = LayoutInflater.from(getContext());
         TableRow row = (TableRow) inflater.inflate(R.layout.table_row_topic, topicTable, false);
 
@@ -181,39 +204,105 @@ public class TopicPlannerFragment extends Fragment {
         Spinner mainTopicSpinner = row.findViewById(R.id.spinnerMainTopic);
         Spinner subTopicSpinner = row.findViewById(R.id.spinnerSubTopic);
 
-        // Populate unit spinner
-        List<String> unitNames = new ArrayList<>();
-        for (UnitMainTopic umt : unitMainTopicList) {
-            unitNames.add(umt.unit);
+        // Only show units that haven't reached their hours limit
+        List<String> availableUnits = new ArrayList<>();
+        for (UnitData ud : unitDataList) {
+            int assigned = unitAssignedCount.getOrDefault(ud.unit, 0);
+            if (assigned < ud.hours) {
+                availableUnits.add(ud.unit);
+            }
         }
-        ArrayAdapter<String> unitAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, unitNames);
+        if (availableUnits.isEmpty()) {
+            Toast.makeText(getContext(), "All units have reached their maximum allowed hours.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        ArrayAdapter<String> unitAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, availableUnits);
         unitAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         unitSpinner.setAdapter(unitAdapter);
 
-        // Listener: when unit changes, update main topic and sub topic
         unitSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (position < 0 || position >= unitMainTopicList.size()) return;
-                UnitMainTopic selectedUnit = unitMainTopicList.get(position);
+                String selectedUnit = availableUnits.get(position);
+                UnitData selectedUnitData = null;
+                for (UnitData ud : unitDataList) {
+                    if (ud.unit.equals(selectedUnit)) {
+                        selectedUnitData = ud;
+                        break;
+                    }
+                }
+                if (selectedUnitData == null) return;
 
-                ArrayAdapter<String> mainTopicAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, selectedUnit.mainTopics);
-                mainTopicAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                mainTopicSpinner.setAdapter(mainTopicAdapter);
+                // If mainTopics is empty, hide mainTopicSpinner and use subtopics
+                if (selectedUnitData.mainTopics == null || selectedUnitData.mainTopics.isEmpty()) {
+                    mainTopicSpinner.setVisibility(View.GONE);
+                    setMultiSelectSpinner(subTopicSpinner, selectedUnitData.subtopics);
+                } else {
+                    mainTopicSpinner.setVisibility(View.VISIBLE);
 
-                ArrayAdapter<String> subTopicAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, selectedUnit.topics);
-                subTopicAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                subTopicSpinner.setAdapter(subTopicAdapter);
+                    List<String> mainTopicNames = new ArrayList<>();
+                    for (MainTopic mt : selectedUnitData.mainTopics) {
+                        mainTopicNames.add(mt.name);
+                    }
+                    ArrayAdapter<String> mainAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, mainTopicNames);
+                    mainAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                    mainTopicSpinner.setAdapter(mainAdapter);
+
+                    final UnitData finalSelectedUnitData = selectedUnitData;
+                    mainTopicSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                        @Override
+                        public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
+                            MainTopic selectedMainTopic = finalSelectedUnitData.mainTopics.get(pos);
+                            setMultiSelectSpinner(subTopicSpinner, selectedMainTopic.subtopics);
+                        }
+                        @Override
+                        public void onNothingSelected(AdapterView<?> parent) {}
+                    });
+                }
             }
             @Override
             public void onNothingSelected(AdapterView<?> parent) {}
         });
 
-        // Set initial main topic and sub topic for the first unit
-        if (!unitMainTopicList.isEmpty()) {
-            UnitMainTopic firstUnit = unitMainTopicList.get(0);
-            mainTopicSpinner.setAdapter(new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, firstUnit.mainTopics));
-            subTopicSpinner.setAdapter(new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, firstUnit.topics));
+        // Set initial main topic and sub topic for the first available unit
+        if (!availableUnits.isEmpty()) {
+            String firstUnit = availableUnits.get(0);
+            UnitData firstUnitData = null;
+            for (UnitData ud : unitDataList) {
+                if (ud.unit.equals(firstUnit)) {
+                    firstUnitData = ud;
+                    break;
+                }
+            }
+            if (firstUnitData != null) {
+                if (firstUnitData.mainTopics == null || firstUnitData.mainTopics.isEmpty()) {
+                    mainTopicSpinner.setVisibility(View.GONE);
+                    setMultiSelectSpinner(subTopicSpinner, firstUnitData.subtopics);
+                } else {
+                    mainTopicSpinner.setVisibility(View.VISIBLE);
+                    List<String> mainTopicNames = new ArrayList<>();
+                    for (MainTopic mt : firstUnitData.mainTopics) {
+                        mainTopicNames.add(mt.name);
+                    }
+                    ArrayAdapter<String> mainAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, mainTopicNames);
+                    mainAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                    mainTopicSpinner.setAdapter(mainAdapter);
+
+                    if (!firstUnitData.mainTopics.isEmpty()) {
+                        setMultiSelectSpinner(subTopicSpinner, firstUnitData.mainTopics.get(0).subtopics);
+                    }
+                    final UnitData finalFirstUnitData = firstUnitData;
+                    mainTopicSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                        @Override
+                        public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
+                            MainTopic selectedMainTopic = finalFirstUnitData.mainTopics.get(pos);
+                            setMultiSelectSpinner(subTopicSpinner, selectedMainTopic.subtopics);
+                        }
+                        @Override
+                        public void onNothingSelected(AdapterView<?> parent) {}
+                    });
+                }
+            }
         }
 
         Spinner bloomSpinner = row.findViewById(R.id.spinnerBloom);
@@ -227,12 +316,61 @@ public class TopicPlannerFragment extends Fragment {
         activityAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         activitySpinner.setAdapter(activityAdapter);
 
+        // Track unit assignment count when row is added
+        String selectedUnit = availableUnits.get(0);
+        unitAssignedCount.put(selectedUnit, unitAssignedCount.getOrDefault(selectedUnit, 0) + 1);
+
         topicTable.addView(row);
+    }
+
+    private void setMultiSelectSpinner(Spinner spinner, List<String> items) {
+        spinner.setOnTouchListener((v, event) -> {
+            showMultiSelectDialog(items, spinner);
+            return true;
+        });
+    }
+
+    private void showMultiSelectDialog(List<String> items, Spinner spinner) {
+        boolean[] checkedItems = new boolean[items.size()];
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Select Items")
+                .setMultiChoiceItems(items.toArray(new String[0]), checkedItems,
+                        (dialog, which, isChecked) -> checkedItems[which] = isChecked)
+                .setPositiveButton("OK", (dialog, which) -> {
+                    List<String> selected = new ArrayList<>();
+                    for (int i = 0; i < checkedItems.length; i++) {
+                        if (checkedItems[i]) selected.add(items.get(i));
+                    }
+                    updateSpinnerDisplay(spinner, selected);
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void updateSpinnerDisplay(Spinner spinner, List<String> selected) {
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(),
+                android.R.layout.simple_spinner_item,
+                Collections.singletonList(TextUtils.join(", ", selected)));
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
     }
 
     private void deleteLastTableRow() {
         int childCount = topicTable.getChildCount();
-        if (childCount > 1) {
+        if (childCount > 1) { // Keep header row
+            View lastChild = topicTable.getChildAt(childCount-1);
+            if (lastChild instanceof TableRow) {
+                Spinner unitSpinner = lastChild.findViewById(R.id.spinnerUnit);
+                if (unitSpinner != null && unitSpinner.getSelectedItem() != null) {
+                    String unit = unitSpinner.getSelectedItem().toString();
+                    int count = unitAssignedCount.getOrDefault(unit, 1);
+                    if (count > 1) {
+                        unitAssignedCount.put(unit, count - 1);
+                    } else {
+                        unitAssignedCount.remove(unit);
+                    }
+                }
+            }
             topicTable.removeViewAt(childCount - 1);
         }
     }
