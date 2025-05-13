@@ -1,3 +1,8 @@
+Smart WorkDiary for Teachers with Timetable Visualization and Notifications
+
+
+
+
 This project proposes a Smart Digital WorkDiary, an Android-based mobile application designed for teachers
 to efficiently manage and record their daily academic activities through an intuitive digital interface.
 Educational institutions still relying on physical work diaries face issues like incomplete records, data loss,
