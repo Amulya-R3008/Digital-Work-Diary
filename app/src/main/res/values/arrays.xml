@@ -1,0 +1,49 @@
+<resources>
+    <string-array name="weeks">
+        <item>Week 1</item>
+        <item>Week 2</item>
+        <item>Week 3</item>
+        <item>Week 4</item>
+        <item>Week 5</item>
+        <item>Week 6</item>
+        <item>Week 7</item>
+        <item>Week 8</item>
+        <item>Week 9</item>
+        <item>Week 10</item>
+        <item>Week 11</item>
+        <item>Week 12</item>
+        <item>Week 13</item>
+        <item>Week 14</item>
+        <item>Week 15</item>
+        <item>Week 16</item>
+        <item>Week 17</item>
+        <item>Week 18</item>
+        <item>Week 19</item>
+        <item>Week 20</item>
+    </string-array>
+    <string-array name="days">
+        <item>Day 1</item>
+        <item>Day 2</item>
+        <!-- ... up to Day 140 ... -->
+        <item>Day 140</item>
+    </string-array>
+    <string-array name="bloom_levels">
+        <item>L1: Remember</item>
+        <item>L2: Understand</item>
+        <item>L3: Apply</item>
+        <item>L4: Analyze</item>
+        <item>L5: Evaluate</item>
+    </string-array>
+    <string-array name="course_outcomes">
+        <item>CO1</item>
+        <item>CO2</item>
+        <item>CO3</item>
+        <item>CO4</item>
+        <item>CO5</item>
+    </string-array>
+    <string-array name="activities">
+        <item>Google Classroom</item>
+        <item>Quiz</item>
+        <item>Seminar</item>
+    </string-array>
+</resources>
