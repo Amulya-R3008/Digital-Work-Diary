@@ -1,27 +1,23 @@
 package com.example.workdiary;
 
-import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TableLayout;
-import android.widget.TableRow;
-import android.widget.Toast;
-
+import android.widget.*;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-
-import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
+import yuku.ambilwarna.AmbilWarnaDialog;
 
 public class TimetableActivity extends AppCompatActivity {
 
     private TableLayout tableLayout;
     private Button editButton, saveButton;
     private boolean isEditable = false;
-    private ParseObject timetableObject; // Keep reference to avoid creating duplicates
+    private ParseObject timetableObject;
+    private EditText selectedCell;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,7 +28,7 @@ public class TimetableActivity extends AppCompatActivity {
         editButton = findViewById(R.id.editButton);
         saveButton = findViewById(R.id.saveButton);
 
-        // Initially, disable editing
+        // (Assume your timetable is already built in XML or dynamically)
         setTableEditable(false);
         loadTimetableFromParse();
 
@@ -42,13 +38,8 @@ public class TimetableActivity extends AppCompatActivity {
         });
 
         saveButton.setOnClickListener(v -> {
-            if (isEditable) {
-                saveTimetableToParse();
-            }
+            if (isEditable) saveTimetableToParse();
         });
-
-        // Optional: Back button logic if needed
-        findViewById(R.id.backButton).setOnClickListener(v -> finish());
     }
 
     private void setTableEditable(boolean editable) {
@@ -60,10 +51,54 @@ public class TimetableActivity extends AppCompatActivity {
                     View cell = row.getChildAt(j);
                     if (cell instanceof EditText) {
                         cell.setEnabled(editable);
+                        if (editable) {
+                            cell.setOnClickListener(v -> {
+                                selectedCell = (EditText) cell;
+                                showCellOptionsDialog();
+                            });
+                        } else {
+                            cell.setOnClickListener(null);
+                        }
                     }
                 }
             }
         }
+    }
+
+    private void showCellOptionsDialog() {
+        String[] options = {"Edit Subject", "Change Text Color", "Change Background Color"};
+        new AlertDialog.Builder(this)
+                .setTitle("Cell Options")
+                .setItems(options, (dialog, which) -> {
+                    if (which == 0) {
+                        selectedCell.requestFocus();
+                        selectedCell.setSelection(selectedCell.getText().length());
+                    } else if (which == 1) {
+                        openColorPicker(true);
+                    } else if (which == 2) {
+                        openColorPicker(false);
+                    }
+                })
+                .show();
+    }
+
+    private void openColorPicker(boolean forText) {
+        int initialColor = forText ? selectedCell.getCurrentTextColor()
+                : ((selectedCell.getBackground() instanceof android.graphics.drawable.ColorDrawable)
+                ? ((android.graphics.drawable.ColorDrawable) selectedCell.getBackground()).getColor()
+                : Color.WHITE);
+        new AmbilWarnaDialog(this, initialColor, new AmbilWarnaDialog.OnAmbilWarnaListener() {
+            @Override
+            public void onOk(AmbilWarnaDialog dialog, int color) {
+                if (forText) {
+                    selectedCell.setTextColor(color);
+                } else {
+                    selectedCell.setBackgroundColor(color);
+                }
+            }
+            @Override
+            public void onCancel(AmbilWarnaDialog dialog) {}
+        }).show();
     }
 
     private void saveTimetableToParse() {
@@ -85,9 +120,15 @@ public class TimetableActivity extends AppCompatActivity {
                 for (int j = 1; j < row.getChildCount(); j++) {
                     View cell = row.getChildAt(j);
                     if (cell instanceof EditText) {
+                        EditText et = (EditText) cell;
                         String key = "cell_" + i + "_" + j;
-                        String value = ((EditText) cell).getText().toString().trim();
-                        timetableObject.put(key, value);
+                        timetableObject.put(key, et.getText().toString().trim());
+                        timetableObject.put(key + "_textColor", et.getCurrentTextColor());
+                        int bgColor = Color.WHITE;
+                        if (et.getBackground() instanceof android.graphics.drawable.ColorDrawable) {
+                            bgColor = ((android.graphics.drawable.ColorDrawable) et.getBackground()).getColor();
+                        }
+                        timetableObject.put(key + "_bgColor", bgColor);
                     }
                 }
             }
@@ -120,11 +161,14 @@ public class TimetableActivity extends AppCompatActivity {
                         for (int j = 1; j < row.getChildCount(); j++) {
                             View cell = row.getChildAt(j);
                             if (cell instanceof EditText) {
+                                EditText et = (EditText) cell;
                                 String key = "cell_" + i + "_" + j;
                                 String data = object.getString(key);
-                                if (data != null) {
-                                    ((EditText) cell).setText(data);
-                                }
+                                if (data != null) et.setText(data);
+                                int textColor = object.getInt(key + "_textColor");
+                                int bgColor = object.getInt(key + "_bgColor");
+                                if (textColor != 0) et.setTextColor(textColor);
+                                if (bgColor != 0) et.setBackgroundColor(bgColor);
                             }
                         }
                     }
