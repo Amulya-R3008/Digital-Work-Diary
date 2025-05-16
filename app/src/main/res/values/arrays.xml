@@ -24,15 +24,151 @@
     <string-array name="days">
         <item>Day 1</item>
         <item>Day 2</item>
-        <!-- ... up to Day 140 ... -->
+        <item>Day 3</item>
+        <item>Day 4</item>
+        <item>Day 5</item>
+        <item>Day 6</item>
+        <item>Day 7</item>
+        <item>Day 8</item>
+        <item>Day 9</item>
+        <item>Day 10</item>
+        <item>Day 11</item>
+        <item>Day 12</item>
+        <item>Day 13</item>
+        <item>Day 14</item>
+        <item>Day 15</item>
+        <item>Day 16</item>
+        <item>Day 17</item>
+        <item>Day 18</item>
+        <item>Day 19</item>
+        <item>Day 20</item>
+        <item>Day 21</item>
+        <item>Day 22</item>
+        <item>Day 23</item>
+        <item>Day 24</item>
+        <item>Day 25</item>
+        <item>Day 26</item>
+        <item>Day 27</item>
+        <item>Day 28</item>
+        <item>Day 29</item>
+        <item>Day 30</item>
+        <item>Day 31</item>
+        <item>Day 32</item>
+        <item>Day 33</item>
+        <item>Day 34</item>
+        <item>Day 35</item>
+        <item>Day 36</item>
+        <item>Day 37</item>
+        <item>Day 38</item>
+        <item>Day 39</item>
+        <item>Day 40</item>
+        <item>Day 41</item>
+        <item>Day 42</item>
+        <item>Day 43</item>
+        <item>Day 44</item>
+        <item>Day 45</item>
+        <item>Day 46</item>
+        <item>Day 47</item>
+        <item>Day 48</item>
+        <item>Day 49</item>
+        <item>Day 50</item>
+        <item>Day 51</item>
+        <item>Day 52</item>
+        <item>Day 53</item>
+        <item>Day 54</item>
+        <item>Day 55</item>
+        <item>Day 56</item>
+        <item>Day 57</item>
+        <item>Day 58</item>
+        <item>Day 59</item>
+        <item>Day 60</item>
+        <item>Day 61</item>
+        <item>Day 62</item>
+        <item>Day 63</item>
+        <item>Day 64</item>
+        <item>Day 65</item>
+        <item>Day 66</item>
+        <item>Day 67</item>
+        <item>Day 68</item>
+        <item>Day 69</item>
+        <item>Day 70</item>
+        <item>Day 71</item>
+        <item>Day 72</item>
+        <item>Day 73</item>
+        <item>Day 74</item>
+        <item>Day 75</item>
+        <item>Day 76</item>
+        <item>Day 77</item>
+        <item>Day 78</item>
+        <item>Day 79</item>
+        <item>Day 80</item>
+        <item>Day 81</item>
+        <item>Day 82</item>
+        <item>Day 83</item>
+        <item>Day 84</item>
+        <item>Day 85</item>
+        <item>Day 86</item>
+        <item>Day 87</item>
+        <item>Day 88</item>
+        <item>Day 89</item>
+        <item>Day 90</item>
+        <item>Day 91</item>
+        <item>Day 92</item>
+        <item>Day 93</item>
+        <item>Day 94</item>
+        <item>Day 95</item>
+        <item>Day 96</item>
+        <item>Day 97</item>
+        <item>Day 98</item>
+        <item>Day 99</item>
+        <item>Day 100</item>
+        <item>Day 101</item>
+        <item>Day 102</item>
+        <item>Day 103</item>
+        <item>Day 104</item>
+        <item>Day 105</item>
+        <item>Day 106</item>
+        <item>Day 107</item>
+        <item>Day 108</item>
+        <item>Day 109</item>
+        <item>Day 110</item>
+        <item>Day 111</item>
+        <item>Day 112</item>
+        <item>Day 113</item>
+        <item>Day 114</item>
+        <item>Day 115</item>
+        <item>Day 116</item>
+        <item>Day 117</item>
+        <item>Day 118</item>
+        <item>Day 119</item>
+        <item>Day 120</item>
+        <item>Day 121</item>
+        <item>Day 122</item>
+        <item>Day 123</item>
+        <item>Day 124</item>
+        <item>Day 125</item>
+        <item>Day 126</item>
+        <item>Day 127</item>
+        <item>Day 128</item>
+        <item>Day 129</item>
+        <item>Day 130</item>
+        <item>Day 131</item>
+        <item>Day 132</item>
+        <item>Day 133</item>
+        <item>Day 134</item>
+        <item>Day 135</item>
+        <item>Day 136</item>
+        <item>Day 137</item>
+        <item>Day 138</item>
+        <item>Day 139</item>
         <item>Day 140</item>
     </string-array>
     <string-array name="bloom_levels">
-        <item>L1: Remember</item>
-        <item>L2: Understand</item>
-        <item>L3: Apply</item>
-        <item>L4: Analyze</item>
-        <item>L5: Evaluate</item>
+        <item>L1</item>
+        <item>L2</item>
+        <item>L3</item>
+        <item>L4</item>
+        <item>L5</item>
     </string-array>
     <string-array name="course_outcomes">
         <item>CO1</item>
