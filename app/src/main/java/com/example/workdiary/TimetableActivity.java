@@ -1,23 +1,40 @@
 package com.example.workdiary;
 
+import android.Manifest;
+import android.app.DownloadManager;
+import android.content.ContentValues;
+import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.pdf.PdfDocument;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.view.View;
 import android.widget.*;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import yuku.ambilwarna.AmbilWarnaDialog;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 
 public class TimetableActivity extends AppCompatActivity {
 
     private TableLayout tableLayout;
-    private Button editButton, saveButton;
+    private Button editButton, saveButton, downloadButton;
     private boolean isEditable = false;
     private ParseObject timetableObject;
     private EditText selectedCell;
+    private static final int REQUEST_WRITE_PERMISSION = 1001;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,8 +44,8 @@ public class TimetableActivity extends AppCompatActivity {
         tableLayout = findViewById(R.id.tableLayout);
         editButton = findViewById(R.id.editButton);
         saveButton = findViewById(R.id.saveButton);
+        downloadButton = findViewById(R.id.downloadButton);
 
-        // (Assume your timetable is already built in XML or dynamically)
         setTableEditable(false);
         loadTimetableFromParse();
 
@@ -40,6 +57,32 @@ public class TimetableActivity extends AppCompatActivity {
         saveButton.setOnClickListener(v -> {
             if (isEditable) saveTimetableToParse();
         });
+
+        downloadButton.setOnClickListener(v -> {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(this,
+                            new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_WRITE_PERMISSION);
+                } else {
+                    downloadTimetableAsPdf();
+                }
+            } else {
+                downloadTimetableAsPdf();
+            }
+        });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_WRITE_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                downloadTimetableAsPdf();
+            } else {
+                Toast.makeText(this, "Permission denied to write to storage", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     private void setTableEditable(boolean editable) {
@@ -175,5 +218,84 @@ public class TimetableActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    // --- PDF DOWNLOAD FUNCTIONALITY ---
+
+    private void downloadTimetableAsPdf() {
+        String fileName = "timetable.pdf";
+        PdfDocument pdfDocument = new PdfDocument();
+        Paint paint = new Paint();
+        int pageWidth = 595; // A4 size in points (approx 8.3in * 72)
+        int pageHeight = 842; // A4 size in points (approx 11.7in * 72)
+        int y = 40;
+
+        PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(pageWidth, pageHeight, 1).create();
+        PdfDocument.Page page = pdfDocument.startPage(pageInfo);
+
+        for (int i = 0; i < tableLayout.getChildCount(); i++) {
+            View rowView = tableLayout.getChildAt(i);
+            if (rowView instanceof TableRow) {
+                TableRow row = (TableRow) rowView;
+                int x = 20;
+                for (int j = 0; j < row.getChildCount(); j++) {
+                    View cell = row.getChildAt(j);
+                    String cellText = "";
+                    if (cell instanceof EditText) {
+                        cellText = ((EditText) cell).getText().toString();
+                    } else if (cell instanceof TextView) {
+                        cellText = ((TextView) cell).getText().toString();
+                    }
+                    paint.setColor(Color.BLACK);
+                    paint.setTextSize(14f);
+                    page.getCanvas().drawText(cellText, x, y, paint);
+                    x += 100; // Adjust column width as needed
+                }
+                y += 30; // Adjust row height as needed
+                if (y > pageHeight - 40) break; // Avoid overflow
+            }
+        }
+        pdfDocument.finishPage(page);
+
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                ContentValues values = new ContentValues();
+                values.put(MediaStore.Downloads.DISPLAY_NAME, fileName);
+                values.put(MediaStore.Downloads.MIME_TYPE, "application/pdf");
+                values.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
+
+                Uri uri = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+                if (uri != null) {
+                    OutputStream os = getContentResolver().openOutputStream(uri);
+                    if (os != null) {
+                        pdfDocument.writeTo(os);
+                        os.close();
+                        Toast.makeText(this, "Timetable PDF downloaded to Downloads", Toast.LENGTH_LONG).show();
+                    }
+                }
+            } else {
+                File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                File file = new File(downloadsDir, fileName);
+                FileOutputStream fos = new FileOutputStream(file);
+                pdfDocument.writeTo(fos);
+                fos.close();
+
+                DownloadManager downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+                downloadManager.addCompletedDownload(
+                        file.getName(),
+                        "Timetable downloaded",
+                        true,
+                        "application/pdf",
+                        file.getAbsolutePath(),
+                        file.length(),
+                        true
+                );
+                Toast.makeText(this, "Timetable PDF downloaded to Downloads", Toast.LENGTH_LONG).show();
+            }
+        } catch (Exception e) {
+            Toast.makeText(this, "PDF download failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        } finally {
+            pdfDocument.close();
+        }
     }
 }

@@ -11,7 +11,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
-import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
@@ -30,15 +29,19 @@ public class TopicPlannerFragment extends Fragment {
     private boolean isEditMode = false;
     private ParseObject loadedPlan = null;
 
+    // Info fields
+    private TextView facultyName;
+    private EditText courseTitle, totalHours, seeMarks, cieMarks, credits, semester, courseCode, academicYear;
+
     // Use a unique tag ID for storing subtopic selections in TableRow
     private static final int SUBTOPIC_TAG_KEY = R.id.btnSubtopics;
 
     private static class UnitData {
         String unit;
-        int hours;
+        String hours; // as string
         List<MainTopic> mainTopics;
         List<String> subtopics;
-        UnitData(String unit, int hours, List<MainTopic> mainTopics, List<String> subtopics) {
+        UnitData(String unit, String hours, List<MainTopic> mainTopics, List<String> subtopics) {
             this.unit = unit;
             this.hours = hours;
             this.mainTopics = mainTopics;
@@ -58,15 +61,80 @@ public class TopicPlannerFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_topic_planner, container, false);
+
+        // Find all info fields
+        facultyName = rootView.findViewById(R.id.facultyName);
+        courseTitle = rootView.findViewById(R.id.courseTitle);
+        totalHours = rootView.findViewById(R.id.totalHours);
+        seeMarks = rootView.findViewById(R.id.seeMarks);
+        cieMarks = rootView.findViewById(R.id.cieMarks);
+        credits = rootView.findViewById(R.id.credits);
+        semester = rootView.findViewById(R.id.semester);
+        courseCode = rootView.findViewById(R.id.courseCode);
+        academicYear = rootView.findViewById(R.id.academicYear);
+
         topicTable = rootView.findViewById(R.id.topicTable);
         addRowButton = rootView.findViewById(R.id.addRowButton);
         deleteRowButton = rootView.findViewById(R.id.deleteRowButton);
         editButton = rootView.findViewById(R.id.editButton);
         saveButton = rootView.findViewById(R.id.saveButton);
 
+        // Show faculty name (prefer 'name' field, fallback to username)
+        ParseUser currentUser = ParseUser.getCurrentUser();
+        String displayName = currentUser.getString("name");
+        if (displayName == null || displayName.trim().isEmpty()) {
+            displayName = currentUser.getUsername();
+        }
+        facultyName.setText("Faculty: " + displayName);
+
         setupButtons();
-        loadPlanOrDefaults();
+        loadSubjectInfoAndPlan();
+
         return rootView;
+    }
+
+    private void loadSubjectInfoAndPlan() {
+        String subjectName = getSubjectNameFromArgs();
+        if (TextUtils.isEmpty(subjectName)) return;
+        ParseQuery<ParseObject> query = ParseQuery.getQuery("SubjectInfo");
+        query.whereEqualTo("subjectName", subjectName);
+        query.getFirstInBackground((subject, e) -> {
+            if (subject != null && getActivity() != null) {
+                requireActivity().runOnUiThread(() -> {
+                    // All fields as string
+                    courseTitle.setText(subject.getString("subjectName"));
+                    totalHours.setText(subject.getString("totalHours"));
+                    seeMarks.setText(subject.getString("seeMarks"));
+                    cieMarks.setText(subject.getString("cieMarks"));
+                    credits.setText(subject.getString("credits"));
+                    semester.setText(subject.getString("semester"));
+                    courseCode.setText(subject.getString("courseCode"));
+
+                    // Make these fields non-editable (except academicYear)
+                    setEditTextEnabled(courseTitle, false);
+                    setEditTextEnabled(totalHours, false);
+                    setEditTextEnabled(seeMarks, false);
+                    setEditTextEnabled(cieMarks, false);
+                    setEditTextEnabled(credits, false);
+                    setEditTextEnabled(semester, false);
+                    setEditTextEnabled(courseCode, false);
+                    setEditTextEnabled(academicYear, false); // Will be enabled in edit mode
+
+                    // Parse units for the table
+                    JSONArray unitsArray = subject.getJSONArray("units");
+                    parseUnitsArray(unitsArray);
+
+                    // Now load the plan or defaults
+                    loadPlanOrDefaults();
+                });
+            }
+        });
+    }
+
+    private void setEditTextEnabled(EditText editText, boolean enabled) {
+        editText.setEnabled(enabled);
+        editText.setFocusable(enabled);
+        editText.setFocusableInTouchMode(enabled);
     }
 
     private void setupButtons() {
@@ -101,51 +169,42 @@ public class TopicPlannerFragment extends Fragment {
                 topicTable.removeViews(1, topicTable.getChildCount() - 1);
                 if (plan != null) {
                     loadedPlan = plan;
-                    loadUnits(() -> {
-                        JSONArray savedRows = plan.getJSONArray("rows");
-                        if (savedRows != null) {
-                            for (int i = 0; i < savedRows.length(); i++) {
-                                try {
-                                    addRowWithData(savedRows.getJSONObject(i));
-                                } catch (JSONException ex) {
-                                    Log.e(TAG, "Error parsing saved row", ex);
-                                }
+                    // Load academic year
+                    String planAcademicYear = plan.getString("academicYear");
+                    academicYear.setText(planAcademicYear != null ? planAcademicYear : "");
+                    setEditTextEnabled(academicYear, false);
+
+                    JSONArray savedRows = plan.getJSONArray("rows");
+                    if (savedRows != null) {
+                        for (int i = 0; i < savedRows.length(); i++) {
+                            try {
+                                addRowWithData(savedRows.getJSONObject(i));
+                            } catch (JSONException ex) {
+                                Log.e(TAG, "Error parsing saved row", ex);
                             }
                         }
-                        toggleEditMode(false);
-                    });
+                    }
+                    toggleEditMode(false);
                 } else {
                     loadedPlan = null;
-                    loadUnits(() -> {
-                        addTableRow();
-                        toggleEditMode(false);
-                    });
+                    academicYear.setText(""); // Clear academic year for new plan
+                    setEditTextEnabled(academicYear, false);
+                    addTableRow();
+                    toggleEditMode(false);
                 }
             });
         });
-    }
-
-    private void loadUnits(Runnable onComplete) {
-        String subjectName = getSubjectNameFromArgs();
-        ParseQuery<ParseObject> query = ParseQuery.getQuery("SubjectInfo");
-        query.whereEqualTo("subjectName", subjectName);
-        query.getFirstInBackground((subject, e) -> {
-            if (subject != null) {
-                JSONArray unitsArray = subject.getJSONArray("units");
-                parseUnitsArray(unitsArray);
-                unitsLoaded = true;
-                requireActivity().runOnUiThread(onComplete);
-            }
-        });
+        unitsLoaded = true;
     }
 
     private void parseUnitsArray(JSONArray unitsArray) {
         unitDataList.clear();
+        if (unitsArray == null) return;
         try {
             for (int i = 0; i < unitsArray.length(); i++) {
                 JSONObject unitObj = unitsArray.getJSONObject(i);
                 String unit = unitObj.getString("unit");
-                int hours = unitObj.getInt("hours");
+                String hours = unitObj.optString("hours", ""); // as string
                 List<MainTopic> mainTopics = new ArrayList<>();
                 List<String> unitSubtopics = new ArrayList<>();
                 JSONArray mainTopicsArray = unitObj.optJSONArray("mainTopics");
@@ -187,8 +246,8 @@ public class TopicPlannerFragment extends Fragment {
                 .inflate(R.layout.table_row_topic, topicTable, false);
 
         try {
-            String unit = rowData.optString("unit");
-            String mainTopic = rowData.optString("mainTopic");
+            String unit = rowData.getString("unit");
+            String mainTopic = rowData.getString("mainTopic");
             List<String> subTopics = new ArrayList<>();
             JSONArray subtopicsArr = rowData.optJSONArray("subTopics");
             if (subtopicsArr != null) {
@@ -198,11 +257,11 @@ public class TopicPlannerFragment extends Fragment {
             }
             setupSpinners(row, unit, mainTopic, subTopics);
 
-            setSpinnerSelection(row.findViewById(R.id.spinnerWeek), rowData.optString("week"));
-            setSpinnerSelection(row.findViewById(R.id.spinnerDay), rowData.optString("day"));
-            setSpinnerSelection(row.findViewById(R.id.spinnerBloom), rowData.optString("bloom"));
-            setSpinnerSelection(row.findViewById(R.id.spinnerCO), rowData.optString("co"));
-            setSpinnerSelection(row.findViewById(R.id.spinnerActivity), rowData.optString("activity"));
+            setSpinnerSelection(row.findViewById(R.id.spinnerWeek), rowData.getString("week"));
+            setSpinnerSelection(row.findViewById(R.id.spinnerDay), rowData.getString("day"));
+            setSpinnerSelection(row.findViewById(R.id.spinnerBloom), rowData.getString("bloom"));
+            setSpinnerSelection(row.findViewById(R.id.spinnerCO), rowData.getString("co"));
+            setSpinnerSelection(row.findViewById(R.id.spinnerActivity), rowData.getString("activity"));
 
             topicTable.addView(row);
         } catch (JSONException e) {
@@ -327,8 +386,11 @@ public class TopicPlannerFragment extends Fragment {
             new AlertDialog.Builder(requireContext())
                     .setTitle("Select Subtopics")
                     .setMultiChoiceItems(items.toArray(new String[0]), checkedItems, (dialog, which, isChecked) -> {
-                        if (isChecked) selected.add(items.get(which));
-                        else selected.remove(items.get(which));
+                        if (isChecked) {
+                            if (!selected.contains(items.get(which))) selected.add(items.get(which));
+                        } else {
+                            selected.remove(items.get(which));
+                        }
                     })
                     .setPositiveButton("OK", (dialog, which) -> {
                         row.setTag(SUBTOPIC_TAG_KEY, new ArrayList<>(selected));
@@ -352,6 +414,12 @@ public class TopicPlannerFragment extends Fragment {
     private boolean canAddMoreRowsForUnit(String unitName) {
         UnitData unit = getUnitData(unitName);
         if (unit == null) return false;
+        int allowed = 0;
+        try {
+            allowed = Integer.parseInt(unit.hours);
+        } catch (NumberFormatException e) {
+            allowed = 0;
+        }
         int currentRows = 0;
         for (int i = 1; i < topicTable.getChildCount(); i++) {
             TableRow row = (TableRow) topicTable.getChildAt(i);
@@ -360,7 +428,7 @@ public class TopicPlannerFragment extends Fragment {
                 currentRows++;
             }
         }
-        return currentRows < unit.hours;
+        return currentRows < allowed;
     }
 
     private String getSelectedUnitFromLastRow() {
@@ -453,6 +521,9 @@ public class TopicPlannerFragment extends Fragment {
         deleteRowButton.setEnabled(enable);
         saveButton.setEnabled(enable);
         editButton.setEnabled(!enable);
+
+        // Only academicYear is editable in edit mode
+        setEditTextEnabled(academicYear, enable);
     }
 
     private void setRowEditable(TableRow row, boolean editable) {
@@ -470,6 +541,11 @@ public class TopicPlannerFragment extends Fragment {
         plan.put("subjectName", subjectName);
         plan.put("user", ParseUser.getCurrentUser());
         plan.put("rows", rows);
+
+        // Save academic year
+        String year = academicYear.getText().toString();
+        plan.put("academicYear", year);
+
         plan.saveInBackground(e -> {
             if (e == null) {
                 showToast("Plan saved successfully");
