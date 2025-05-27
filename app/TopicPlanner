@@ -1,7 +1,6 @@
 //new one
 
 package com.example.workdiary;
-
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
