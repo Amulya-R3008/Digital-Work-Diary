@@ -1,7 +1,6 @@
 //new one
 
 package com.example.workdiary;
-
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -21,7 +20,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.util.*;
-
 public class TopicPlannerFragment extends Fragment {
 
     private static final String TAG = "TopicPlannerFragment";
