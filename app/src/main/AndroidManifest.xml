@@ -3,10 +3,22 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.example.workdiary">
     <!-- Permission to access the internet -->
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
+
     <uses-permission android:name="android.permission.INTERNET" />
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+
+    <uses-permission android:name="android.permission.SEND_SMS"/>
+
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+
+
+    <uses-permission android:name="android.permission.SEND_SMS"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
 
     <application
@@ -20,6 +32,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.WorkDiary"
         tools:targetApi="31">
+        <receiver android:name=".ReminderReceiver"/>
         <activity
             android:name=".TopicsPlannerActivity"
             android:exported="false" />
