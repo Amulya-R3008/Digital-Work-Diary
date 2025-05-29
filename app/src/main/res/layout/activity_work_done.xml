@@ -1,71 +1,155 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:padding="12dp"
+    android:background="#F6FAFD"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <!-- Logo and Title -->
+    <ImageView
+        android:id="@+id/img_logo"
+        android:src="@drawable/rv_logo"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_gravity="center_horizontal"
+        android:contentDescription="App Logo" />
 
     <TextView
+        android:id="@+id/tv_title"
         android:text="WORKDONE STATEMENT"
         android:textStyle="bold"
-        android:textSize="18sp"
+        android:textSize="20sp"
+        android:textColor="#22577A"
         android:gravity="center"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingBottom="8dp"/>
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_workdone"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"/>
-
-    <Button
-        android:id="@+id/btn_add_row"
-        android:text="Add Row"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end"
         android:layout_marginTop="8dp"/>
 
+    <!-- Faculty Name -->
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:paddingTop="8dp">
+        android:layout_marginTop="18dp"
+        android:layout_marginBottom="8dp"
+        android:gravity="center_vertical">
 
         <TextView
             android:text="Name of Faculty:"
+            android:textColor="#22577A"
+            android:textStyle="bold"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
         <EditText
             android:id="@+id/et_faculty"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
+            android:minHeight="48dp"
             android:layout_weight="1"
             android:hint="Enter name"
-            android:padding="4dp"/>
+            android:background="@drawable/rounded_edittext"
+            android:padding="8dp"/>
     </LinearLayout>
 
+    <!-- Scrollable Table Area -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fillViewport="true"
+            android:scrollbars="horizontal">
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <!-- Column Headers -->
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="#E3F0FF"
+                    android:padding="6dp">
+
+                    <TextView android:text="Day &amp; Date" android:layout_width="120dp" android:layout_height="wrap_content" android:gravity="center" android:textStyle="bold"/>
+                    <TextView android:text="Time" android:layout_width="90dp" android:layout_height="wrap_content" android:gravity="center" android:textStyle="bold"/>
+                    <TextView android:text="Class" android:layout_width="90dp" android:layout_height="wrap_content" android:gravity="center" android:textStyle="bold"/>
+                    <TextView android:text="Course" android:layout_width="90dp" android:layout_height="wrap_content" android:gravity="center" android:textStyle="bold"/>
+                    <TextView android:text="Portion" android:layout_width="130dp" android:layout_height="wrap_content" android:gravity="center" android:textStyle="bold"/>
+                    <TextView android:text="No." android:layout_width="60dp" android:layout_height="wrap_content" android:gravity="center" android:textStyle="bold"/>
+                    <TextView android:text="Remarks" android:layout_width="120dp" android:layout_height="wrap_content" android:gravity="center" android:textStyle="bold"/>
+                    <TextView android:text="" android:layout_width="48dp" android:layout_height="wrap_content"/>
+                </LinearLayout>
+
+                <!-- RecyclerView for rows -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rv_workdone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="#FFFFFF"
+                    android:elevation="2dp"
+                    android:contentDescription="Workdone Statement Table"/>
+            </LinearLayout>
+        </HorizontalScrollView>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Add/Delete Row Buttons at the bottom -->
     <LinearLayout
         android:orientation="horizontal"
-        android:gravity="center"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="8dp">
+        android:gravity="end"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="8dp">
+
+        <Button
+            android:id="@+id/btn_add_row"
+            android:text="Add Row"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#38A3A5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"/>
+
+        <Button
+            android:id="@+id/btn_delete_row"
+            android:text="Delete Row"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#22577A"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+
+    <!-- Edit and Save Buttons (Bottom right corner) -->
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp">
 
         <Button
             android:id="@+id/btn_edit"
             android:text="Edit"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#57CC99"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"/>
+            android:layout_marginEnd="12dp"/>
 
         <Button
             android:id="@+id/btn_save"
             android:text="Save"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#22577A"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
     </LinearLayout>

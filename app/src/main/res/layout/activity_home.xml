@@ -1,39 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:padding="16dp"
-    android:background="@color/white">
+    android:layout_height="match_parent">
 
-    <!-- Profile Icon -->
+    <!-- Background Image: more visible (alpha 0.45) -->
     <ImageView
-        android:id="@+id/profileIcon"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:layout_marginTop="16dp"
-        android:src="@drawable/rv_logo"
-        android:background="@drawable/circle_background"
-        android:padding="8dp"
-        android:contentDescription="Profile"
-        android:clickable="true"
-        android:focusable="true"
+        android:id="@+id/bgImage"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/college_bg"
+        android:alpha="0.45"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Tile Container -->
+    <!-- Optional: Very light overlay for readability, can be removed or made even lighter -->
+    <View
+        android:id="@+id/overlay"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="#20FFFFFF"
+    app:layout_constraintTop_toTopOf="parent"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Welcome Message and Profile Icon Row -->
+    <LinearLayout
+        android:id="@+id/topRow"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingTop="32dp"
+        android:paddingBottom="16dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/welcomeText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Welcome, Amulya!"
+            android:textColor="#22577A"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:gravity="start"
+            android:maxLines="1"
+            android:ellipsize="end"/>
+
+        <ImageView
+            android:id="@+id/profileIcon"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:src="@drawable/rv_logo"
+            android:background="@drawable/circle_background"
+            android:padding="8dp"
+            android:contentDescription="Profile"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginStart="12dp"/>
+    </LinearLayout>
+
+    <!-- Tiles Container -->
     <LinearLayout
         android:id="@+id/tilesContainer"
-        android:layout_width="400dp"
-        android:layout_height="415dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:gravity="center_horizontal"
         android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:paddingTop="24dp"
+        app:layout_constraintTop_toBottomOf="@id/topRow"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/profileIcon"
-        app:layout_constraintVertical_bias="0.4">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <!-- First row: Timetable & Work Done -->
         <LinearLayout
@@ -105,13 +150,15 @@
         <!-- Second row: Centered Topics Planner -->
         <LinearLayout
             android:id="@+id/tileTopicsPlanner"
-            android:layout_width="191dp"
+            android:layout_width="match_parent"
             android:layout_height="150dp"
             android:background="@drawable/tile_background"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp">
 
             <ImageView
                 android:layout_width="64dp"
@@ -129,4 +176,5 @@
                 android:textStyle="bold" />
         </LinearLayout>
     </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

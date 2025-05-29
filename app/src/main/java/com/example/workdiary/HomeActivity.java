@@ -9,6 +9,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.PopupMenu;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -28,8 +29,25 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        // Ensure user is logged in
+        TextView welcomeText = findViewById(R.id.welcomeText);
+
         ParseUser currentUser = ParseUser.getCurrentUser();
+        if (currentUser != null) {
+            // Fetch the name field from the user object
+            String name = currentUser.getString("name");
+            if (name != null && !name.isEmpty()) {
+                welcomeText.setText("Welcome " + name+"!");
+            } else {
+                // Fallback to username if name is not set
+                String username = currentUser.getUsername();
+                welcomeText.setText("Welcome " + username+"!");
+            }
+        } else {
+            welcomeText.setText("Welcome");
+        }
+
+        // Ensure user is logged in
+        //ParseUser currentUser = ParseUser.getCurrentUser();
         if (currentUser == null) {
             Toast.makeText(this, "Session expired. Please login again.", Toast.LENGTH_LONG).show();
             startActivity(new Intent(this, MainActivity.class));
