@@ -1,118 +1,123 @@
 package com.example.workdiary;
 
-import android.app.DatePickerDialog;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.*;
-import android.widget.*;
+import android.widget.EditText;
+import android.widget.ImageButton;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-import java.util.*;
+import java.util.List;
 
-public class WorkdoneAdapter extends RecyclerView.Adapter<WorkdoneAdapter.ViewHolder> {
-    private final List<WorkdoneRow> rows;
-    private final String[] remarksOptions = {
-            "Seminar", "Talk from Expert", "9/13", "2/10", "Seminar Hall"
-    };
+public class WorkdoneAdapter extends RecyclerView.Adapter<WorkdoneAdapter.WorkdoneViewHolder> {
+    private final List<WorkdoneRow> rowList;
+    private boolean isEditMode = false;
+    private final OnRowDeleteListener deleteListener;
 
     public interface OnRowDeleteListener {
         void onRowDelete(int position);
     }
 
-    private final OnRowDeleteListener deleteListener;
+    public WorkdoneAdapter(List<WorkdoneRow> rowList, OnRowDeleteListener deleteListener) {
+        this.rowList = rowList;
+        this.deleteListener = deleteListener;
+    }
 
-    public WorkdoneAdapter(List<WorkdoneRow> rows, OnRowDeleteListener listener) {
-        this.rows = rows;
-        this.deleteListener = listener;
+    public void setEditMode(boolean isEditMode) {
+        this.isEditMode = isEditMode;
     }
 
     @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public WorkdoneViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_workdone_row, parent, false);
-        return new ViewHolder(v);
+        return new WorkdoneViewHolder(v);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder h, int pos) {
-        WorkdoneRow row = rows.get(pos);
+    public void onBindViewHolder(@NonNull WorkdoneViewHolder holder, int position) {
+        WorkdoneRow row = rowList.get(position);
 
-        h.tvDayDate.setText(row.dayDate.isEmpty() ? "Select" : row.dayDate);
-        h.etTime.setText(row.time);
-        h.etClass.setText(row.classSection);
-        h.etCourse.setText(row.course);
-        h.etPortion.setText(row.portion);
-        h.etStudents.setText(row.students);
+        holder.etDayDate.setText(row.dayDate);
+        holder.etTime.setText(row.time);
+        holder.etClass.setText(row.className);
+        holder.etCourse.setText(row.course);
+        holder.etPortion.setText(row.portion);
+        holder.etNo.setText(row.no);
+        holder.etRemarks.setText(row.remarks);
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(h.spinnerRemarks.getContext(),
-                android.R.layout.simple_spinner_dropdown_item, remarksOptions);
-        h.spinnerRemarks.setAdapter(adapter);
-        int selIdx = Arrays.asList(remarksOptions).indexOf(row.remarks);
-        h.spinnerRemarks.setSelection(selIdx >= 0 ? selIdx : 0);
+        holder.clearWatchers();
 
-        h.tvDayDate.setOnClickListener(v -> {
-            Calendar c = Calendar.getInstance();
-            DatePickerDialog dp = new DatePickerDialog(v.getContext(),
-                    (view, year, month, day) -> {
-                        String date = String.format("%s\n%02d/%02d/%02d",
-                                getDayOfWeek(year, month, day), day, month + 1, year % 100);
-                        h.tvDayDate.setText(date);
-                        row.dayDate = date;
-                    },
-                    c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
-            dp.show();
-        });
+        holder.etDayDate.addTextChangedListener(holder.getWatcher(s -> row.dayDate = s));
+        holder.etTime.addTextChangedListener(holder.getWatcher(s -> row.time = s));
+        holder.etClass.addTextChangedListener(holder.getWatcher(s -> row.className = s));
+        holder.etCourse.addTextChangedListener(holder.getWatcher(s -> row.course = s));
+        holder.etPortion.addTextChangedListener(holder.getWatcher(s -> row.portion = s));
+        holder.etNo.addTextChangedListener(holder.getWatcher(s -> row.no = s));
+        holder.etRemarks.addTextChangedListener(holder.getWatcher(s -> row.remarks = s));
 
-        h.spinnerRemarks.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override public void onItemSelected(AdapterView<?> parent, View v, int p, long id) {
-                row.remarks = remarksOptions[p];
+        holder.etDayDate.setEnabled(isEditMode);
+        holder.etTime.setEnabled(isEditMode);
+        holder.etClass.setEnabled(isEditMode);
+        holder.etCourse.setEnabled(isEditMode);
+        holder.etPortion.setEnabled(isEditMode);
+        holder.etNo.setEnabled(isEditMode);
+        holder.etRemarks.setEnabled(isEditMode);
+
+        // Show/hide delete (cross) button
+        holder.btnDelete.setVisibility(isEditMode ? View.VISIBLE : View.GONE);
+        holder.btnDelete.setOnClickListener(v -> {
+            int pos = holder.getAdapterPosition();
+            if (deleteListener != null && pos != RecyclerView.NO_POSITION) {
+                deleteListener.onRowDelete(pos);
             }
-            @Override public void onNothingSelected(AdapterView<?> parent) {}
         });
-
-        h.etTime.addTextChangedListener(new SimpleTextWatcher(s -> row.time = s));
-        h.etClass.addTextChangedListener(new SimpleTextWatcher(s -> row.classSection = s));
-        h.etCourse.addTextChangedListener(new SimpleTextWatcher(s -> row.course = s));
-        h.etPortion.addTextChangedListener(new SimpleTextWatcher(s -> row.portion = s));
-        h.etStudents.addTextChangedListener(new SimpleTextWatcher(s -> row.students = s));
-
-        h.btnDelete.setOnClickListener(v -> deleteListener.onRowDelete(pos));
     }
 
     @Override
-    public int getItemCount() { return rows.size(); }
+    public int getItemCount() {
+        return rowList.size();
+    }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvDayDate;
-        EditText etTime, etClass, etCourse, etPortion, etStudents;
-        Spinner spinnerRemarks;
+    static class WorkdoneViewHolder extends RecyclerView.ViewHolder {
+        EditText etDayDate, etTime, etClass, etCourse, etPortion, etNo, etRemarks;
         ImageButton btnDelete;
-        ViewHolder(View v) {
-            super(v);
-            tvDayDate = v.findViewById(R.id.tv_day_date);
-            etTime = v.findViewById(R.id.et_time);
-            etClass = v.findViewById(R.id.et_class);
-            etCourse = v.findViewById(R.id.et_course);
-            etPortion = v.findViewById(R.id.et_portion);
-            etStudents = v.findViewById(R.id.et_students);
-            spinnerRemarks = v.findViewById(R.id.spinner_remarks);
-            btnDelete = v.findViewById(R.id.btn_delete);
+        private final TextWatcher[] watchers = new TextWatcher[7];
+
+        public WorkdoneViewHolder(@NonNull View itemView) {
+            super(itemView);
+            etDayDate = itemView.findViewById(R.id.et_day_date);
+            etTime = itemView.findViewById(R.id.et_time);
+            etClass = itemView.findViewById(R.id.et_class);
+            etCourse = itemView.findViewById(R.id.et_course);
+            etPortion = itemView.findViewById(R.id.et_portion);
+            etNo = itemView.findViewById(R.id.et_no);
+            etRemarks = itemView.findViewById(R.id.et_remarks);
+            btnDelete = itemView.findViewById(R.id.btn_delete_row);
         }
-    }
 
-    private String getDayOfWeek(int year, int month, int day) {
-        Calendar cal = Calendar.getInstance();
-        cal.set(year, month, day);
-        String[] days = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
-        return days[cal.get(Calendar.DAY_OF_WEEK) - 1];
-    }
+        void clearWatchers() {
+            EditText[] fields = {etDayDate, etTime, etClass, etCourse, etPortion, etNo, etRemarks};
+            for (int i = 0; i < fields.length; i++) {
+                if (watchers[i] != null) fields[i].removeTextChangedListener(watchers[i]);
+                watchers[i] = null;
+            }
+        }
 
-    public static class SimpleTextWatcher implements TextWatcher {
-        private final java.util.function.Consumer<String> consumer;
-        public SimpleTextWatcher(java.util.function.Consumer<String> consumer) { this.consumer = consumer; }
-        @Override public void beforeTextChanged(CharSequence s, int st, int c, int a) {}
-        @Override public void onTextChanged(CharSequence s, int st, int b, int c) { consumer.accept(s.toString()); }
-        @Override public void afterTextChanged(Editable s) {}
+        TextWatcher getWatcher(java.util.function.Consumer<String> consumer) {
+            TextWatcher watcher = new TextWatcher() {
+                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+                @Override public void afterTextChanged(Editable s) { consumer.accept(s.toString()); }
+            };
+            for (int i = 0; i < watchers.length; i++) {
+                if (watchers[i] == null) {
+                    watchers[i] = watcher;
+                    break;
+                }
+            }
+            return watcher;
+        }
     }
 }

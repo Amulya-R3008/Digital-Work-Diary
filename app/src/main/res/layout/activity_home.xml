@@ -150,15 +150,15 @@
         <!-- Second row: Centered Topics Planner -->
         <LinearLayout
             android:id="@+id/tileTopicsPlanner"
-            android:layout_width="match_parent"
+            android:layout_width="185dp"
             android:layout_height="150dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
             android:background="@drawable/tile_background"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
-            android:orientation="vertical"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp">
+            android:orientation="vertical">
 
             <ImageView
                 android:layout_width="64dp"

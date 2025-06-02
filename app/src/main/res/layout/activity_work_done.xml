@@ -25,7 +25,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"/>
 
-    <!-- Faculty Name -->
+    <!-- Faculty Name (no border, just text) -->
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
@@ -41,15 +41,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
-        <EditText
-            android:id="@+id/et_faculty"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:minHeight="48dp"
-            android:layout_weight="1"
-            android:hint="Enter name"
-            android:background="@drawable/rounded_edittext"
-            android:padding="8dp"/>
+        <TextView
+            android:id="@+id/tv_faculty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Amulya"
+            android:textColor="#22577A"
+            android:textStyle="normal"
+            android:layout_marginStart="8dp"/>
     </LinearLayout>
 
     <!-- Scrollable Table Area -->
@@ -100,7 +99,7 @@
         </HorizontalScrollView>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- Add/Delete Row Buttons at the bottom -->
+    <!-- Add Row Button at the bottom (initially hidden) -->
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
@@ -116,15 +115,8 @@
             android:backgroundTint="#38A3A5"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"/>
-
-        <Button
-            android:id="@+id/btn_delete_row"
-            android:text="Delete Row"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#22577A"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_marginEnd="8dp"
+            android:visibility="gone"/>
     </LinearLayout>
 
     <!-- Edit and Save Buttons (Bottom right corner) -->
