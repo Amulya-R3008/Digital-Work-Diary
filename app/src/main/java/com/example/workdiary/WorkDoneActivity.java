@@ -7,6 +7,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class WorkDoneActivity extends AppCompatActivity {
@@ -33,7 +34,10 @@ public class WorkDoneActivity extends AppCompatActivity {
 
         btnAddRow.setOnClickListener(v -> {
             if (isEditMode) {
-                rowList.add(new WorkdoneRow());
+                String currentDayDate = new SimpleDateFormat("EEE dd-MM-yyyy", Locale.getDefault()).format(new Date());
+                WorkdoneRow newRow = new WorkdoneRow();
+                newRow.dayDate = currentDayDate.toUpperCase(); // e.g., "MON 24-06-2025"
+                rowList.add(newRow);
                 adapter.notifyItemInserted(rowList.size() - 1);
             }
         });
@@ -56,8 +60,11 @@ public class WorkDoneActivity extends AppCompatActivity {
             Toast.makeText(this, "Saved!", Toast.LENGTH_SHORT).show();
         });
 
-        // Optionally, prepopulate a row
-        rowList.add(new WorkdoneRow());
+        // Prepopulate a row with current day and date
+        String currentDayDate = new SimpleDateFormat("EEE dd-MM-yyyy", Locale.getDefault()).format(new Date());
+        WorkdoneRow firstRow = new WorkdoneRow();
+        firstRow.dayDate = currentDayDate.toUpperCase();
+        rowList.add(firstRow);
         adapter.notifyItemInserted(0);
     }
 }

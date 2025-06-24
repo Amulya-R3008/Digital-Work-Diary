@@ -1,5 +1,6 @@
 package com.example.workdiary;
 
+import android.app.DatePickerDialog;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.*;
@@ -7,7 +8,11 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class WorkdoneAdapter extends RecyclerView.Adapter<WorkdoneAdapter.WorkdoneViewHolder> {
     private final List<WorkdoneRow> rowList;
@@ -73,6 +78,15 @@ public class WorkdoneAdapter extends RecyclerView.Adapter<WorkdoneAdapter.Workdo
                 deleteListener.onRowDelete(pos);
             }
         });
+
+        // Date picker logic
+        holder.etDayDate.setInputType(0); // Prevent keyboard
+        holder.etDayDate.setFocusable(false);
+        holder.etDayDate.setOnClickListener(v -> {
+            if (isEditMode) {
+                holder.showDatePicker(row);
+            }
+        });
     }
 
     @Override
@@ -80,7 +94,7 @@ public class WorkdoneAdapter extends RecyclerView.Adapter<WorkdoneAdapter.Workdo
         return rowList.size();
     }
 
-    static class WorkdoneViewHolder extends RecyclerView.ViewHolder {
+    class WorkdoneViewHolder extends RecyclerView.ViewHolder {
         EditText etDayDate, etTime, etClass, etCourse, etPortion, etNo, etRemarks;
         ImageButton btnDelete;
         private final TextWatcher[] watchers = new TextWatcher[7];
@@ -118,6 +132,30 @@ public class WorkdoneAdapter extends RecyclerView.Adapter<WorkdoneAdapter.Workdo
                 }
             }
             return watcher;
+        }
+
+        void showDatePicker(WorkdoneRow row) {
+            Calendar calendar = Calendar.getInstance();
+            try {
+                if (!row.dayDate.isEmpty()) {
+                    SimpleDateFormat sdf = new SimpleDateFormat("EEE dd-MM-yyyy", Locale.getDefault());
+                    Date date = sdf.parse(row.dayDate);
+                    if (date != null) calendar.setTime(date);
+                }
+            } catch (Exception ignored) {}
+
+            new DatePickerDialog(itemView.getContext(),
+                    (view, year, month, dayOfMonth) -> {
+                        Calendar selected = Calendar.getInstance();
+                        selected.set(year, month, dayOfMonth);
+                        String formatted = new SimpleDateFormat("EEE dd-MM-yyyy", Locale.getDefault()).format(selected.getTime()).toUpperCase();
+                        etDayDate.setText(formatted);
+                        row.dayDate = formatted;
+                    },
+                    calendar.get(Calendar.YEAR),
+                    calendar.get(Calendar.MONTH),
+                    calendar.get(Calendar.DAY_OF_MONTH)
+            ).show();
         }
     }
 }
