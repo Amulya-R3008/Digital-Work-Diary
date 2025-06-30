@@ -1,18 +1,13 @@
 package com.example.workdiary;
 
-import android.app.DatePickerDialog;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.view.*;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 public class WorkdoneAdapter extends RecyclerView.Adapter<WorkdoneAdapter.WorkdoneViewHolder> {
     private final List<WorkdoneRow> rowList;
@@ -30,6 +25,7 @@ public class WorkdoneAdapter extends RecyclerView.Adapter<WorkdoneAdapter.Workdo
 
     public void setEditMode(boolean isEditMode) {
         this.isEditMode = isEditMode;
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -52,16 +48,6 @@ public class WorkdoneAdapter extends RecyclerView.Adapter<WorkdoneAdapter.Workdo
         holder.etNo.setText(row.no);
         holder.etRemarks.setText(row.remarks);
 
-        holder.clearWatchers();
-
-        holder.etDayDate.addTextChangedListener(holder.getWatcher(s -> row.dayDate = s));
-        holder.etTime.addTextChangedListener(holder.getWatcher(s -> row.time = s));
-        holder.etClass.addTextChangedListener(holder.getWatcher(s -> row.className = s));
-        holder.etCourse.addTextChangedListener(holder.getWatcher(s -> row.course = s));
-        holder.etPortion.addTextChangedListener(holder.getWatcher(s -> row.portion = s));
-        holder.etNo.addTextChangedListener(holder.getWatcher(s -> row.no = s));
-        holder.etRemarks.addTextChangedListener(holder.getWatcher(s -> row.remarks = s));
-
         holder.etDayDate.setEnabled(isEditMode);
         holder.etTime.setEnabled(isEditMode);
         holder.etClass.setEnabled(isEditMode);
@@ -70,21 +56,11 @@ public class WorkdoneAdapter extends RecyclerView.Adapter<WorkdoneAdapter.Workdo
         holder.etNo.setEnabled(isEditMode);
         holder.etRemarks.setEnabled(isEditMode);
 
-        // Show/hide delete (cross) button
         holder.btnDelete.setVisibility(isEditMode ? View.VISIBLE : View.GONE);
         holder.btnDelete.setOnClickListener(v -> {
             int pos = holder.getAdapterPosition();
             if (deleteListener != null && pos != RecyclerView.NO_POSITION) {
                 deleteListener.onRowDelete(pos);
-            }
-        });
-
-        // Date picker logic
-        holder.etDayDate.setInputType(0); // Prevent keyboard
-        holder.etDayDate.setFocusable(false);
-        holder.etDayDate.setOnClickListener(v -> {
-            if (isEditMode) {
-                holder.showDatePicker(row);
             }
         });
     }
@@ -94,10 +70,9 @@ public class WorkdoneAdapter extends RecyclerView.Adapter<WorkdoneAdapter.Workdo
         return rowList.size();
     }
 
-    class WorkdoneViewHolder extends RecyclerView.ViewHolder {
+    static class WorkdoneViewHolder extends RecyclerView.ViewHolder {
         EditText etDayDate, etTime, etClass, etCourse, etPortion, etNo, etRemarks;
         ImageButton btnDelete;
-        private final TextWatcher[] watchers = new TextWatcher[7];
 
         public WorkdoneViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -109,53 +84,6 @@ public class WorkdoneAdapter extends RecyclerView.Adapter<WorkdoneAdapter.Workdo
             etNo = itemView.findViewById(R.id.et_no);
             etRemarks = itemView.findViewById(R.id.et_remarks);
             btnDelete = itemView.findViewById(R.id.btn_delete_row);
-        }
-
-        void clearWatchers() {
-            EditText[] fields = {etDayDate, etTime, etClass, etCourse, etPortion, etNo, etRemarks};
-            for (int i = 0; i < fields.length; i++) {
-                if (watchers[i] != null) fields[i].removeTextChangedListener(watchers[i]);
-                watchers[i] = null;
-            }
-        }
-
-        TextWatcher getWatcher(java.util.function.Consumer<String> consumer) {
-            TextWatcher watcher = new TextWatcher() {
-                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-                @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
-                @Override public void afterTextChanged(Editable s) { consumer.accept(s.toString()); }
-            };
-            for (int i = 0; i < watchers.length; i++) {
-                if (watchers[i] == null) {
-                    watchers[i] = watcher;
-                    break;
-                }
-            }
-            return watcher;
-        }
-
-        void showDatePicker(WorkdoneRow row) {
-            Calendar calendar = Calendar.getInstance();
-            try {
-                if (!row.dayDate.isEmpty()) {
-                    SimpleDateFormat sdf = new SimpleDateFormat("EEE dd-MM-yyyy", Locale.getDefault());
-                    Date date = sdf.parse(row.dayDate);
-                    if (date != null) calendar.setTime(date);
-                }
-            } catch (Exception ignored) {}
-
-            new DatePickerDialog(itemView.getContext(),
-                    (view, year, month, dayOfMonth) -> {
-                        Calendar selected = Calendar.getInstance();
-                        selected.set(year, month, dayOfMonth);
-                        String formatted = new SimpleDateFormat("EEE dd-MM-yyyy", Locale.getDefault()).format(selected.getTime()).toUpperCase();
-                        etDayDate.setText(formatted);
-                        row.dayDate = formatted;
-                    },
-                    calendar.get(Calendar.YEAR),
-                    calendar.get(Calendar.MONTH),
-                    calendar.get(Calendar.DAY_OF_MONTH)
-            ).show();
         }
     }
 }
