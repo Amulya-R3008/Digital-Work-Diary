@@ -1,4 +1,4 @@
-Smart WorkDiary for Teachers with Timetable Visualization and Notifications
+**Smart WorkDiary for Teachers with Timetable Visualization and Notifications**
 
 
 
