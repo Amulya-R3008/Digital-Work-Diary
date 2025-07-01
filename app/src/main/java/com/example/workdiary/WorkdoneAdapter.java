@@ -48,13 +48,14 @@ public class WorkdoneAdapter extends RecyclerView.Adapter<WorkdoneAdapter.Workdo
         holder.etNo.setText(row.no);
         holder.etRemarks.setText(row.remarks);
 
-        holder.etDayDate.setEnabled(isEditMode);
-        holder.etTime.setEnabled(isEditMode);
-        holder.etClass.setEnabled(isEditMode);
-        holder.etCourse.setEnabled(isEditMode);
-        holder.etPortion.setEnabled(isEditMode);
-        holder.etNo.setEnabled(isEditMode);
-        holder.etRemarks.setEnabled(isEditMode);
+        // Only focusable in edit mode
+        setEditTextFocusable(holder.etDayDate, isEditMode);
+        setEditTextFocusable(holder.etTime, isEditMode);
+        setEditTextFocusable(holder.etClass, isEditMode);
+        setEditTextFocusable(holder.etCourse, isEditMode);
+        setEditTextFocusable(holder.etPortion, isEditMode);
+        setEditTextFocusable(holder.etNo, isEditMode);
+        setEditTextFocusable(holder.etRemarks, isEditMode);
 
         holder.btnDelete.setVisibility(isEditMode ? View.VISIBLE : View.GONE);
         holder.btnDelete.setOnClickListener(v -> {
@@ -63,6 +64,13 @@ public class WorkdoneAdapter extends RecyclerView.Adapter<WorkdoneAdapter.Workdo
                 deleteListener.onRowDelete(pos);
             }
         });
+    }
+
+    private void setEditTextFocusable(EditText editText, boolean focusable) {
+        editText.setFocusable(focusable);
+        editText.setFocusableInTouchMode(focusable);
+        editText.setCursorVisible(focusable);
+        editText.setLongClickable(focusable);
     }
 
     @Override

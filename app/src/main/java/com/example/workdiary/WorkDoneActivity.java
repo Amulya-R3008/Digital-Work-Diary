@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -18,7 +19,6 @@ public class WorkDoneActivity extends AppCompatActivity {
     private WorkdoneAdapter adapter;
     private boolean isEditMode = false;
 
-    // Define your period time slots and their column indices
     private static final String[] TIMES = {
             "9:00-10:00", "10:00-11:00", "11:00-11:30", "11:30-12:30",
             "12:30-1:30", "1:30-2:30", "2:30-3:30", "3:30-4:30"
@@ -33,8 +33,11 @@ public class WorkDoneActivity extends AppCompatActivity {
         RecyclerView rv = findViewById(R.id.rv_workdone);
         rv.setLayoutManager(new LinearLayoutManager(this));
         adapter = new WorkdoneAdapter(rowList, position -> {
-            rowList.remove(position);
-            adapter.notifyItemRemoved(position);
+            if (position >= 0 && position < rowList.size()) {
+                rowList.remove(position);
+                adapter.notifyItemRemoved(position);
+                adapter.notifyItemRangeChanged(position, rowList.size() - position);
+            }
         });
         rv.setAdapter(adapter);
 
@@ -44,7 +47,7 @@ public class WorkDoneActivity extends AppCompatActivity {
 
         btnAddRow.setOnClickListener(v -> {
             if (isEditMode) {
-                fetchTimetableForAllPeriods();
+                fetchAndAssignPortionsForAllRows();
             }
         });
 
@@ -64,8 +67,8 @@ public class WorkDoneActivity extends AppCompatActivity {
             Toast.makeText(this, "Saved!", Toast.LENGTH_SHORT).show();
         });
 
-        // Always fetch and display only periods with a class for today
-        fetchTimetableForAllPeriods();
+        // Build your rowList here (fetchTimetableForAllPeriods, etc.)
+        fetchTimetableForAllPeriods(); // This will call fetchAndAssignPortionsForAllRows() after filling rowList
     }
 
     private int getRowIndexForDay(String day) {
@@ -80,24 +83,28 @@ public class WorkDoneActivity extends AppCompatActivity {
         }
     }
 
-    // Fetch only periods with a class for today and fill the list
+    // Helper: Extract digits from "Week 2" or "Day 3" etc.
+    private int parseNumberFromString(Object value) {
+        if (value == null) return -1;
+        String str = value.toString().replaceAll("[^\\d]", "");
+        if (str.isEmpty()) return -1;
+        try {
+            return Integer.parseInt(str);
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
+    // 1. Fetch Timetable and build rowList for the day
     private void fetchTimetableForAllPeriods() {
         ParseUser currentUser = ParseUser.getCurrentUser();
-        if (currentUser == null) {
-            Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        if (currentUser == null) return;
         String userId = currentUser.getObjectId();
 
         Date now = new Date();
         String todayDay = new SimpleDateFormat("EEEE", Locale.getDefault()).format(now).toUpperCase();
         String todayDate = new SimpleDateFormat("EEE dd-MM-yyyy", Locale.getDefault()).format(now).toUpperCase();
         int rowIdx = getRowIndexForDay(todayDay);
-
-        if (rowIdx == -1) {
-            Toast.makeText(this, "Invalid day: " + todayDay, Toast.LENGTH_SHORT).show();
-            return;
-        }
 
         ParseQuery<ParseObject> query = ParseQuery.getQuery("Timetable");
         query.whereEqualTo("userId", userId);
@@ -112,13 +119,100 @@ public class WorkDoneActivity extends AppCompatActivity {
                         WorkdoneRow row = new WorkdoneRow();
                         row.dayDate = todayDate;
                         row.time = TIMES[i];
-                        row.course = subject;
+                        row.course = subject.trim().toUpperCase();
                         rowList.add(row);
                     }
                 }
-            } else {
-                Toast.makeText(this, "No timetable found for you.", Toast.LENGTH_SHORT).show();
             }
+            // Sort WorkdoneRows by date+time
+            Collections.sort(rowList, (a, b) -> {
+                SimpleDateFormat sdf = new SimpleDateFormat("EEE dd-MM-yyyy HH:mm", Locale.getDefault());
+                try {
+                    Date dateA = sdf.parse(a.dayDate + " " + a.time.split("-")[0]);
+                    Date dateB = sdf.parse(b.dayDate + " " + b.time.split("-")[0]);
+                    return dateA.compareTo(dateB);
+                } catch (ParseException ex) {
+                    return 0;
+                }
+            });
+            // Now assign portions for all rows (for all subjects)
+            fetchAndAssignPortionsForAllRows();
+        });
+    }
+
+    // 2. For all subjects in rowList, fetch TopicPlan and assign portions
+    private void fetchAndAssignPortionsForAllRows() {
+        ParseUser currentUser = ParseUser.getCurrentUser();
+        if (currentUser == null) return;
+
+        // Group WorkdoneRows by subject
+        Map<String, List<WorkdoneRow>> subjectToRows = new HashMap<>();
+        for (WorkdoneRow wr : rowList) {
+            String subject = wr.course != null ? wr.course.trim().toUpperCase() : "";
+            subjectToRows.computeIfAbsent(subject, k -> new ArrayList<>()).add(wr);
+        }
+
+        // For each subject, fetch the TopicPlan and assign portions
+        for (String subject : subjectToRows.keySet()) {
+            fetchTopicPlanAndAssignPortion(currentUser, subject, subjectToRows.get(subject));
+        }
+    }
+
+    // 3. Fetch TopicPlan for a subject and assign portions to its WorkdoneRows
+    private void fetchTopicPlanAndAssignPortion(ParseUser user, String subject, List<WorkdoneRow> workdoneRows) {
+        ParseQuery<ParseObject> topicQuery = ParseQuery.getQuery("TopicPlan");
+        topicQuery.whereEqualTo("user", user);
+        topicQuery.whereEqualTo("subjectName", subject);
+
+        topicQuery.getFirstInBackground((topicPlan, e) -> {
+            List<Map> sortedTopicRows = new ArrayList<>();
+            if (e == null && topicPlan != null) {
+                List<Object> rowsList = topicPlan.getList("rows");
+                if (rowsList != null) {
+                    for (Object rowObj : rowsList) {
+                        if (rowObj instanceof Map) {
+                            sortedTopicRows.add((Map) rowObj);
+                        }
+                    }
+                    // Sort by week, then day if needed
+                    Collections.sort(sortedTopicRows, (a, b) -> {
+                        int weekA = parseNumberFromString(a.get("week"));
+                        int weekB = parseNumberFromString(b.get("week"));
+                        int dayA = parseNumberFromString(a.get("day"));
+                        int dayB = parseNumberFromString(b.get("day"));
+                        if (weekA != weekB) return weekA - weekB;
+                        return dayA - dayB;
+                    });
+                }
+            }
+            // Build portions list: use first subTopic if present, else mainTopic
+            List<String> portionsOrdered = new ArrayList<>();
+            for (Map row : sortedTopicRows) {
+                List<String> subTopics = null;
+                Object subTopicsObj = row.get("subTopics");
+                if (subTopicsObj instanceof List) {
+                    subTopics = (List<String>) subTopicsObj;
+                }
+                String mainTopic = (String) row.get("mainTopic");
+                String portion = null;
+                if (subTopics != null && !subTopics.isEmpty() && subTopics.get(0) != null && !subTopics.get(0).trim().isEmpty()) {
+                    portion = subTopics.get(0);
+                } else if (mainTopic != null && !mainTopic.trim().isEmpty()) {
+                    portion = mainTopic;
+                }
+                if (portion != null && !portion.trim().isEmpty()) {
+                    portionsOrdered.add(portion);
+                }
+            }
+            // Assign portions in order to the workdoneRows for this subject
+            for (int i = 0; i < workdoneRows.size(); i++) {
+                if (i < portionsOrdered.size()) {
+                    workdoneRows.get(i).portion = portionsOrdered.get(i);
+                } else {
+                    workdoneRows.get(i).portion = "";
+                }
+            }
+            // Notify adapter update on UI thread
             runOnUiThread(() -> adapter.notifyDataSetChanged());
         });
     }
