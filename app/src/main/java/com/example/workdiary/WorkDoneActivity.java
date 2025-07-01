@@ -1,7 +1,6 @@
 package com.example.workdiary;
 
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -47,55 +46,97 @@ public class WorkDoneActivity extends AppCompatActivity {
 
         btnAddRow.setOnClickListener(v -> {
             if (isEditMode) {
-                fetchAndAssignPortionsForAllRows();
+                rowList.add(new WorkdoneRow());
+                adapter.notifyItemInserted(rowList.size() - 1);
             }
         });
 
-        btnAddRow.setVisibility(View.GONE);
+        btnAddRow.setVisibility(Button.GONE);
 
         btnEdit.setOnClickListener(v -> {
             isEditMode = true;
-            btnAddRow.setVisibility(View.VISIBLE);
+            btnAddRow.setVisibility(Button.VISIBLE);
             adapter.setEditMode(true);
             Toast.makeText(this, "Edit mode enabled", Toast.LENGTH_SHORT).show();
         });
 
         btnSave.setOnClickListener(v -> {
             isEditMode = false;
-            btnAddRow.setVisibility(View.GONE);
+            btnAddRow.setVisibility(Button.GONE);
             adapter.setEditMode(false);
-            Toast.makeText(this, "Saved!", Toast.LENGTH_SHORT).show();
+            saveWorkdoneToBack4App();
         });
 
-        // Build your rowList here (fetchTimetableForAllPeriods, etc.)
-        fetchTimetableForAllPeriods(); // This will call fetchAndAssignPortionsForAllRows() after filling rowList
+        loadOrFetchWorkdone();
     }
 
-    private int getRowIndexForDay(String day) {
-        switch (day.toUpperCase()) {
-            case "MONDAY": return 1;
-            case "TUESDAY": return 2;
-            case "WEDNESDAY": return 3;
-            case "THURSDAY": return 4;
-            case "FRIDAY": return 5;
-            case "SATURDAY": return 6;
-            default: return -1;
-        }
+    private void loadOrFetchWorkdone() {
+        ParseUser currentUser = ParseUser.getCurrentUser();
+        if (currentUser == null) return;
+
+        ParseQuery<ParseObject> query = ParseQuery.getQuery("WorkdoneStatement");
+        query.whereEqualTo("user", currentUser);
+        query.orderByAscending("dayDate").addAscendingOrder("time");
+
+        query.findInBackground((list, e) -> {
+            rowList.clear();
+            boolean found = false;
+            if (e == null && list != null && !list.isEmpty()) {
+                for (ParseObject obj : list) {
+                    WorkdoneRow row = new WorkdoneRow();
+                    row.dayDate = obj.getString("dayDate");
+                    row.time = obj.getString("time");
+                    row.className = obj.getString("class"); // Correct field
+                    row.course = obj.getString("course");
+                    row.portion = obj.getString("portion");
+                    row.no = obj.getString("no"); // Correct field
+                    row.remarks = obj.getString("remarks");
+                    rowList.add(row);
+                }
+                found = true;
+            }
+            runOnUiThread(() -> adapter.notifyDataSetChanged());
+            if (!found) {
+                fetchTimetableForAllPeriods();
+            }
+        });
     }
 
-    // Helper: Extract digits from "Week 2" or "Day 3" etc.
-    private int parseNumberFromString(Object value) {
-        if (value == null) return -1;
-        String str = value.toString().replaceAll("[^\\d]", "");
-        if (str.isEmpty()) return -1;
-        try {
-            return Integer.parseInt(str);
-        } catch (NumberFormatException e) {
-            return -1;
-        }
+    private void saveWorkdoneToBack4App() {
+        ParseUser currentUser = ParseUser.getCurrentUser();
+        if (currentUser == null) return;
+
+        // Delete all previous entries for this user before saving new ones
+        ParseQuery<ParseObject> query = ParseQuery.getQuery("WorkdoneStatement");
+        query.whereEqualTo("user", currentUser);
+        query.findInBackground((list, e) -> {
+            if (e == null && list != null) {
+                for (ParseObject obj : list) {
+                    try {
+                        obj.delete();
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            }
+            // Now save the new data
+            for (WorkdoneRow row : rowList) {
+                ParseObject workdoneObj = new ParseObject("WorkdoneStatement");
+                workdoneObj.put("user", currentUser);
+                workdoneObj.put("dayDate", row.dayDate);
+                workdoneObj.put("time", row.time);
+                workdoneObj.put("class", row.className); // must match schema
+                workdoneObj.put("course", row.course);
+                workdoneObj.put("portion", row.portion);
+                workdoneObj.put("no", row.no); // must match schema
+                workdoneObj.put("remarks", row.remarks);
+                workdoneObj.saveInBackground();
+            }
+            runOnUiThread(() -> Toast.makeText(this, "Workdone Statement saved!", Toast.LENGTH_SHORT).show());
+        });
     }
 
-    // 1. Fetch Timetable and build rowList for the day
+    // --- REQUIRED: fetchTimetableForAllPeriods ---
     private void fetchTimetableForAllPeriods() {
         ParseUser currentUser = ParseUser.getCurrentUser();
         if (currentUser == null) return;
@@ -135,12 +176,11 @@ public class WorkDoneActivity extends AppCompatActivity {
                     return 0;
                 }
             });
-            // Now assign portions for all rows (for all subjects)
             fetchAndAssignPortionsForAllRows();
         });
     }
 
-    // 2. For all subjects in rowList, fetch TopicPlan and assign portions
+    // --- REQUIRED: fetchAndAssignPortionsForAllRows ---
     private void fetchAndAssignPortionsForAllRows() {
         ParseUser currentUser = ParseUser.getCurrentUser();
         if (currentUser == null) return;
@@ -158,7 +198,7 @@ public class WorkDoneActivity extends AppCompatActivity {
         }
     }
 
-    // 3. Fetch TopicPlan for a subject and assign portions to its WorkdoneRows
+    // --- REQUIRED: fetchTopicPlanAndAssignPortion ---
     private void fetchTopicPlanAndAssignPortion(ParseUser user, String subject, List<WorkdoneRow> workdoneRows) {
         ParseQuery<ParseObject> topicQuery = ParseQuery.getQuery("TopicPlan");
         topicQuery.whereEqualTo("user", user);
@@ -212,14 +252,38 @@ public class WorkDoneActivity extends AppCompatActivity {
                     workdoneRows.get(i).portion = "";
                 }
             }
-            // Notify adapter update on UI thread
             runOnUiThread(() -> adapter.notifyDataSetChanged());
         });
+    }
+
+    // --- REQUIRED: parseNumberFromString ---
+    private int parseNumberFromString(Object value) {
+        if (value == null) return -1;
+        String str = value.toString().replaceAll("[^\\d]", "");
+        if (str.isEmpty()) return -1;
+        try {
+            return Integer.parseInt(str);
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
+    // --- REQUIRED: getRowIndexForDay ---
+    private int getRowIndexForDay(String day) {
+        switch (day.toUpperCase()) {
+            case "MONDAY": return 1;
+            case "TUESDAY": return 2;
+            case "WEDNESDAY": return 3;
+            case "THURSDAY": return 4;
+            case "FRIDAY": return 5;
+            case "SATURDAY": return 6;
+            default: return -1;
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        fetchTimetableForAllPeriods();
+        loadOrFetchWorkdone();
     }
 }

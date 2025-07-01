@@ -1,5 +1,7 @@
 package com.example.workdiary;
 
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,20 +44,29 @@ public class WorkdoneAdapter extends RecyclerView.Adapter<WorkdoneAdapter.Workdo
 
         holder.etDayDate.setText(row.dayDate);
         holder.etTime.setText(row.time);
-        holder.etClass.setText(row.className);
         holder.etCourse.setText(row.course);
         holder.etPortion.setText(row.portion);
+        holder.etClass.setText(row.className);
         holder.etNo.setText(row.no);
         holder.etRemarks.setText(row.remarks);
 
         // Only focusable in edit mode
         setEditTextFocusable(holder.etDayDate, isEditMode);
         setEditTextFocusable(holder.etTime, isEditMode);
-        setEditTextFocusable(holder.etClass, isEditMode);
         setEditTextFocusable(holder.etCourse, isEditMode);
         setEditTextFocusable(holder.etPortion, isEditMode);
+        setEditTextFocusable(holder.etClass, isEditMode);
         setEditTextFocusable(holder.etNo, isEditMode);
         setEditTextFocusable(holder.etRemarks, isEditMode);
+
+        // TextWatchers to update model on user edit
+        holder.etClass.addTextChangedListener(new SimpleTextWatcher(s -> row.className = s));
+        holder.etNo.addTextChangedListener(new SimpleTextWatcher(s -> row.no = s));
+        holder.etDayDate.addTextChangedListener(new SimpleTextWatcher(s -> row.dayDate = s));
+        holder.etTime.addTextChangedListener(new SimpleTextWatcher(s -> row.time = s));
+        holder.etCourse.addTextChangedListener(new SimpleTextWatcher(s -> row.course = s));
+        holder.etPortion.addTextChangedListener(new SimpleTextWatcher(s -> row.portion = s));
+        holder.etRemarks.addTextChangedListener(new SimpleTextWatcher(s -> row.remarks = s));
 
         holder.btnDelete.setVisibility(isEditMode ? View.VISIBLE : View.GONE);
         holder.btnDelete.setOnClickListener(v -> {
@@ -79,19 +90,28 @@ public class WorkdoneAdapter extends RecyclerView.Adapter<WorkdoneAdapter.Workdo
     }
 
     static class WorkdoneViewHolder extends RecyclerView.ViewHolder {
-        EditText etDayDate, etTime, etClass, etCourse, etPortion, etNo, etRemarks;
+        EditText etDayDate, etTime, etCourse, etPortion, etClass, etNo, etRemarks;
         ImageButton btnDelete;
 
         public WorkdoneViewHolder(@NonNull View itemView) {
             super(itemView);
             etDayDate = itemView.findViewById(R.id.et_day_date);
             etTime = itemView.findViewById(R.id.et_time);
-            etClass = itemView.findViewById(R.id.et_class);
             etCourse = itemView.findViewById(R.id.et_course);
             etPortion = itemView.findViewById(R.id.et_portion);
+            etClass = itemView.findViewById(R.id.et_class);
             etNo = itemView.findViewById(R.id.et_no);
             etRemarks = itemView.findViewById(R.id.et_remarks);
             btnDelete = itemView.findViewById(R.id.btn_delete_row);
         }
+    }
+
+    // Helper class for cleaner TextWatcher
+    private static class SimpleTextWatcher implements TextWatcher {
+        private final java.util.function.Consumer<String> onChanged;
+        SimpleTextWatcher(java.util.function.Consumer<String> onChanged) { this.onChanged = onChanged; }
+        @Override public void beforeTextChanged(CharSequence s, int st, int c, int a) {}
+        @Override public void onTextChanged(CharSequence s, int st, int b, int c) {}
+        @Override public void afterTextChanged(Editable s) { onChanged.accept(s.toString()); }
     }
 }
