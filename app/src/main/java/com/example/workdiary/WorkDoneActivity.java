@@ -24,6 +24,9 @@ public class WorkDoneActivity extends AppCompatActivity {
     };
     private static final int[] COLS = {1,2,3,4,5,6,7,8};
 
+    // Store portion->week mapping for all subjects
+    private Map<String, Integer> portionToWeekMap = new HashMap<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,6 +67,49 @@ public class WorkDoneActivity extends AppCompatActivity {
         loadOrFetchWorkdone();
     }
 
+    private int parseWeekFromString(String weekStr) {
+        if (weekStr == null) return 0;
+        String num = weekStr.replaceAll("[^\\d]", "");
+        if (num.isEmpty()) return 0;
+        try { return Integer.parseInt(num); }
+        catch (Exception e) { return 0; }
+    }
+
+    private int parseTimeToMinutes(String timeStr) {
+        try {
+            String[] parts = timeStr.split("-");
+            String[] hm = parts[0].split(":");
+            return Integer.parseInt(hm[0]) * 60 + Integer.parseInt(hm[1]);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    private int compareDateString(String d1, String d2) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("EEE dd-MM-yyyy", java.util.Locale.getDefault());
+            Date date1 = sdf.parse(d1);
+            Date date2 = sdf.parse(d2);
+            return date1.compareTo(date2);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    private void sortAndNotify() {
+        Collections.sort(rowList, new Comparator<WorkdoneRow>() {
+            @Override
+            public int compare(WorkdoneRow r1, WorkdoneRow r2) {
+                int cmp = Integer.compare(r1.week, r2.week);
+                if (cmp != 0) return cmp;
+                cmp = compareDateString(r1.dayDate, r2.dayDate);
+                if (cmp != 0) return cmp;
+                return Integer.compare(parseTimeToMinutes(r1.time), parseTimeToMinutes(r2.time));
+            }
+        });
+        runOnUiThread(() -> adapter.notifyDataSetChanged());
+    }
+
     private void loadOrFetchWorkdone() {
         ParseUser currentUser = ParseUser.getCurrentUser();
         if (currentUser == null) return;
@@ -87,6 +133,7 @@ public class WorkDoneActivity extends AppCompatActivity {
                     row.portion = obj.getString("portion");
                     row.no = obj.getString("no");
                     row.remarks = obj.getString("remarks");
+                    row.week = 0; // Will be set later
                     String dayKey = (row.dayDate != null ? row.dayDate.trim() : "") + "|" +
                             (row.time != null ? row.time.trim() : "") + "|" +
                             (row.course != null ? row.course.trim().toUpperCase() : "");
@@ -100,7 +147,6 @@ public class WorkDoneActivity extends AppCompatActivity {
             }
             rowList.clear();
             rowList.addAll(uniqueRows.values());
-            runOnUiThread(() -> adapter.notifyDataSetChanged());
             fetchTimetableForTodayAndAssignPortion(savedTodayKeys);
         });
     }
@@ -171,6 +217,7 @@ public class WorkDoneActivity extends AppCompatActivity {
                         row.dayDate = todayDate;
                         row.time = timeKey;
                         row.course = subjectKey;
+                        row.week = 0; // Will be set later
                         autoRows.add(row);
                         rowList.add(row);
                         added = true;
@@ -180,7 +227,7 @@ public class WorkDoneActivity extends AppCompatActivity {
             if (added) {
                 fetchAndAssignPortionsForAutoRows(todayDate, autoRows);
             } else {
-                runOnUiThread(() -> adapter.notifyDataSetChanged());
+                setWeeksForAllRowsAndSort();
             }
         });
     }
@@ -215,6 +262,7 @@ public class WorkDoneActivity extends AppCompatActivity {
 
         topicQuery.getFirstInBackground((topicPlan, e2) -> {
             List<String> portionsOrdered = new ArrayList<>();
+            List<Integer> weeksOrdered = new ArrayList<>();
             if (e2 == null && topicPlan != null) {
                 List<Object> rowsList = topicPlan.getList("rows");
                 if (rowsList != null) {
@@ -227,20 +275,18 @@ public class WorkDoneActivity extends AppCompatActivity {
                                 subTopics = (List<String>) subTopicsObj;
                             }
                             String mainTopic = (String) row.get("mainTopic");
+                            String weekStr = (String) row.get("week");
+                            int weekNum = parseWeekFromString(weekStr);
+                            String portion = "";
                             if (subTopics != null && !subTopics.isEmpty()) {
-                                for (Object sub : subTopics) {
-                                    if (sub != null) {
-                                        String[] splitSubs = sub.toString().split(",");
-                                        for (String s : splitSubs) {
-                                            String portion = s.trim();
-                                            if (!portion.isEmpty() && !coveredPortions.contains(portion)) {
-                                                portionsOrdered.add(portion);
-                                            }
-                                        }
-                                    }
-                                }
-                            } else if (mainTopic != null && !mainTopic.trim().isEmpty() && !coveredPortions.contains(mainTopic.trim())) {
-                                portionsOrdered.add(mainTopic.trim());
+                                portion = joinSubTopics(subTopics);
+                            } else if (mainTopic != null && !mainTopic.trim().isEmpty()) {
+                                portion = mainTopic.trim();
+                            }
+                            if (!portion.isEmpty() && !coveredPortions.contains(portion)) {
+                                portionsOrdered.add(portion);
+                                weeksOrdered.add(weekNum);
+                                portionToWeekMap.put(portion, weekNum); // build mapping for all portions
                             }
                         }
                     }
@@ -249,24 +295,40 @@ public class WorkDoneActivity extends AppCompatActivity {
             for (int i = 0; i < autoRows.size(); i++) {
                 if (i < portionsOrdered.size()) {
                     autoRows.get(i).portion = portionsOrdered.get(i);
+                    autoRows.get(i).week = weeksOrdered.get(i);
                     coveredPortions.add(portionsOrdered.get(i));
                 } else {
                     autoRows.get(i).portion = "";
+                    autoRows.get(i).week = 0;
                 }
             }
-            runOnUiThread(() -> adapter.notifyDataSetChanged());
+            setWeeksForAllRowsAndSort();
         });
     }
 
-    private int parseNumberFromString(Object value) {
-        if (value == null) return -1;
-        String str = value.toString().replaceAll("[^\\d]", "");
-        if (str.isEmpty()) return -1;
-        try {
-            return Integer.parseInt(str);
-        } catch (NumberFormatException e) {
-            return -1;
+    // Join subTopics array as a single string
+    private String joinSubTopics(List<String> subTopics) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < subTopics.size(); i++) {
+            String s = subTopics.get(i).trim();
+            if (!s.isEmpty()) {
+                if (sb.length() > 0) sb.append(", ");
+                sb.append(s);
+            }
         }
+        return sb.toString();
+    }
+
+    // After all portions assigned, set week for ALL rows (including saved) and sort
+    private void setWeeksForAllRowsAndSort() {
+        // For each row, set week using the portionToWeekMap
+        for (WorkdoneRow wr : rowList) {
+            if (wr.portion != null && !wr.portion.trim().isEmpty()) {
+                Integer weekNum = portionToWeekMap.get(wr.portion.trim());
+                wr.week = (weekNum != null) ? weekNum : 0;
+            }
+        }
+        sortAndNotify();
     }
 
     private int getRowIndexForDay(String day) {
