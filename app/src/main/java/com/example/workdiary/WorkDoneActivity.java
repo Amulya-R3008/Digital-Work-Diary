@@ -24,7 +24,6 @@ public class WorkDoneActivity extends AppCompatActivity {
     };
     private static final int[] COLS = {1,2,3,4,5,6,7,8};
 
-    // Store portion->week mapping for all subjects
     private Map<String, Integer> portionToWeekMap = new HashMap<>();
 
     @Override
@@ -107,7 +106,20 @@ public class WorkDoneActivity extends AppCompatActivity {
                 return Integer.compare(parseTimeToMinutes(r1.time), parseTimeToMinutes(r2.time));
             }
         });
+        // Filter to only one row per day
+        rowList = filterOneRowPerDay(rowList);
         runOnUiThread(() -> adapter.notifyDataSetChanged());
+    }
+
+    // Only keep the first row for each dayDate
+    private List<WorkdoneRow> filterOneRowPerDay(List<WorkdoneRow> rows) {
+        Map<String, WorkdoneRow> dateToRow = new LinkedHashMap<>();
+        for (WorkdoneRow row : rows) {
+            if (!dateToRow.containsKey(row.dayDate)) {
+                dateToRow.put(row.dayDate, row);
+            }
+        }
+        return new ArrayList<>(dateToRow.values());
     }
 
     private void loadOrFetchWorkdone() {
@@ -286,7 +298,7 @@ public class WorkDoneActivity extends AppCompatActivity {
                             if (!portion.isEmpty() && !coveredPortions.contains(portion)) {
                                 portionsOrdered.add(portion);
                                 weeksOrdered.add(weekNum);
-                                portionToWeekMap.put(portion, weekNum); // build mapping for all portions
+                                portionToWeekMap.put(portion, weekNum);
                             }
                         }
                     }
@@ -306,7 +318,6 @@ public class WorkDoneActivity extends AppCompatActivity {
         });
     }
 
-    // Join subTopics array as a single string
     private String joinSubTopics(List<String> subTopics) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < subTopics.size(); i++) {
@@ -319,9 +330,7 @@ public class WorkDoneActivity extends AppCompatActivity {
         return sb.toString();
     }
 
-    // After all portions assigned, set week for ALL rows (including saved) and sort
     private void setWeeksForAllRowsAndSort() {
-        // For each row, set week using the portionToWeekMap
         for (WorkdoneRow wr : rowList) {
             if (wr.portion != null && !wr.portion.trim().isEmpty()) {
                 Integer weekNum = portionToWeekMap.get(wr.portion.trim());
