@@ -3,17 +3,16 @@ package com.example.workdiary;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.view.View;
+import android.text.InputType;
 import android.widget.Button;
 import android.widget.TextView;
-
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.snackbar.Snackbar;
-import com.parse.ParseException;
 import com.parse.ParseUser;
 
 public class MainActivity extends AppCompatActivity {
+
     private TextView emailInput, passwordInput;
     private Button loginButton;
     private TextView signupButton;
@@ -23,26 +22,23 @@ public class MainActivity extends AppCompatActivity {
     private int index = 0;
     private long delay = 150; // milliseconds between each character
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Initialize UI elements
         welcomeText = findViewById(R.id.welcomeText);
-
-        startTypingAnimation();
-
         emailInput = findViewById(R.id.emailInput);
         passwordInput = findViewById(R.id.passwordInput);
         loginButton = findViewById(R.id.loginButton);
         signupButton = findViewById(R.id.signupButton);
 
-        // **Remove this check to prevent auto-login behavior**
-        // Check if the user is already logged in
-        // if (ParseUser.getCurrentUser() != null) {
-        //     navigateToHome();
-        // }
+        // Set password field to password type
+        passwordInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+
+        // Start the welcome typing animation
+        startTypingAnimation();
 
         // Handle login button click
         loginButton.setOnClickListener(v -> {
@@ -54,15 +50,18 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            // Verify user credentials with Back4App
+            // Verify user credentials with Back4App (Parse)
             ParseUser.logInInBackground(email, password, (user, e) -> {
                 if (e == null && user != null) {
-                    // Successful login
                     Snackbar.make(v, "Successfully logged in!", Snackbar.LENGTH_SHORT).show();
-                    navigateToHome();
+                    // Check for admin email and navigate accordingly
+                    if (email.equalsIgnoreCase("admin@rvce.edu.in")) {
+                        navigateToAdminDashboard();
+                    } else {
+                        navigateToHome();
+                    }
                 } else {
-                    // Failed login
-                    Snackbar.make(v, "Login failed: " + e.getMessage(), Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(v, "Login failed: " + (e != null ? e.getMessage() : "Unknown error"), Snackbar.LENGTH_LONG).show();
                 }
             });
         });
@@ -74,13 +73,21 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    // Navigate to HomeActivity for regular users
     private void navigateToHome() {
-        // Redirect to the home activity after successful login
         Intent intent = new Intent(MainActivity.this, HomeActivity.class);
         startActivity(intent);
         finish();
     }
 
+    // Navigate to AdminDashboardActivity for admin
+    private void navigateToAdminDashboard() {
+        Intent intent = new Intent(MainActivity.this, Admin_dashboard.class);
+        startActivity(intent);
+        finish();
+    }
+
+    // Typing animation for welcome text
     private void startTypingAnimation() {
         handler.postDelayed(new Runnable() {
             @Override
