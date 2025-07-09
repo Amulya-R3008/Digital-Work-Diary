@@ -27,6 +27,7 @@ public class Admin_dashboard extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d("DebugCheck", "onCreate called");
         setContentView(R.layout.activity_admin_dashboard);
 
         tvTotalFaculty = findViewById(R.id.tvTotalFaculty);
@@ -42,59 +43,100 @@ public class Admin_dashboard extends AppCompatActivity {
     }
 
     private void fetchFacultyAndStatuses() {
+        Log.d("DebugCheck", "fetchFacultyAndStatuses called");
         ParseQuery<ParseUser> facultyQuery = ParseUser.getQuery();
         facultyQuery.whereNotEqualTo("name", "Admin");
         facultyQuery.findInBackground((users, e) -> {
-            if (e == null && users != null) {
-                facultyList.clear();
-                for (ParseUser user : users) {
-                    facultyList.add(new Faculty(user.getString("name"), "Pending", user.getObjectId()));
-                }
-                tvTotalFaculty.setText(String.valueOf(facultyList.size()));
-                fetchTodaySubmissions();
+            if (e != null) {
+                Log.e("DebugCheck", "Error fetching faculty: " + e.getMessage());
+                return;
             }
+            if (users == null || users.isEmpty()) {
+                Log.e("DebugCheck", "No faculty found (excluding admin).");
+                return;
+            }
+            facultyList.clear();
+            for (ParseUser user : users) {
+                facultyList.add(new Faculty(user.getString("name"), "Pending", user.getObjectId()));
+            }
+            tvTotalFaculty.setText(String.valueOf(facultyList.size()));
+
+            for (Faculty faculty : facultyList) {
+                Log.d("DebugCheck", "Faculty name: " + faculty.getName() + ", userId: " + faculty.getUserId());
+            }
+
+            fetchTodaySubmissionsByDayDate();
         });
     }
 
-    private void fetchTodaySubmissions() {
-        // Adjust this format string to match EXACTLY what you see in your Workdiary DB's dayDate field.
-        String today = new SimpleDateFormat("EEE dd-MM-yyyy", Locale.ENGLISH).format(new Date()).toUpperCase();
-        Log.d("DateDebug", "Today's date string: " + today);
+    private void fetchTodaySubmissionsByDayDate() {
+        Log.d("DebugCheck", "fetchTodaySubmissionsByDayDate called");
+
+        // Correct format: "EEE dd-MM-yyyy" ensures leading zero for day and matches DB
+        String today = new SimpleDateFormat("EEE dd-MM-yyyy", Locale.ENGLISH)
+                .format(new Date())
+                .toUpperCase()
+                .trim();
+        Log.d("DebugCheck", "App generated dayDate: '" + today + "', length=" + today.length());
 
         ParseQuery<ParseObject> diaryQuery = ParseQuery.getQuery("Workdiary");
         diaryQuery.whereEqualTo("dayDate", today);
-        diaryQuery.include("user"); // Load the user pointer
+        diaryQuery.include("user");
+        diaryQuery.setCachePolicy(ParseQuery.CachePolicy.NETWORK_ONLY);
+
         diaryQuery.findInBackground((submissions, e) -> {
-            if (e == null && submissions != null) {
-                Set<String> submittedIds = new HashSet<>();
+            Log.d("DebugCheck", "Workdiary query callback called");
+            if (e != null) {
+                Log.e("DebugCheck", "Error fetching submissions: " + e.getMessage());
+                return;
+            }
+            if (submissions == null || submissions.isEmpty()) {
+                Log.w("DebugCheck", "No submissions found for today by dayDate. Check DB data and string format.");
+            } else {
+                Log.d("DebugCheck", "Fetched submissions count: " + submissions.size());
+            }
+
+            Set<String> submittedIds = new HashSet<>();
+            if (submissions != null) {
                 for (ParseObject obj : submissions) {
                     ParseUser userPointer = obj.getParseUser("user");
+                    String dbDayDate = obj.getString("dayDate");
+                    Log.d("DebugCheck", "Workdiary: dayDate='" + dbDayDate + "', length=" + (dbDayDate != null ? dbDayDate.length() : 0)
+                            + ", userId=" + (userPointer != null ? userPointer.getObjectId() : "null"));
                     if (userPointer != null) {
-                        String userId = userPointer.getObjectId();
-                        submittedIds.add(userId);
-                        Log.d("WorkdiaryDebug", "Submission: userId=" + userId + ", dayDate=" + obj.getString("dayDate"));
+                        submittedIds.add(userPointer.getObjectId());
                     }
                 }
-                int submittedCount = 0;
-                for (Faculty faculty : facultyList) {
-                    Log.d("FacultyDebug", "Faculty: userId=" + faculty.getUserId());
-                    if (submittedIds.contains(faculty.getUserId())) {
-                        faculty.setStatus("Submitted");
-                        submittedCount++;
-                    } else {
-                        faculty.setStatus("Pending");
-                    }
+            }
+
+            int submittedCount = 0;
+            for (Faculty faculty : facultyList) {
+                Log.d("DebugCheck", "Faculty: name='" + faculty.getName() + "', userId=" + faculty.getUserId());
+                if (submittedIds.contains(faculty.getUserId())) {
+                    faculty.setStatus("Submitted");
+                    submittedCount++;
+                } else {
+                    faculty.setStatus("Pending");
                 }
-                tvWorkdiarySubmitted.setText(String.valueOf(submittedCount));
-                tvPendingSubmissions.setText(String.valueOf(facultyList.size() - submittedCount));
-                adapter.notifyDataSetChanged();
-            } else if (e != null) {
-                Log.e("WorkdiaryError", "Error fetching submissions: " + e.getMessage());
+            }
+
+            tvWorkdiarySubmitted.setText(String.valueOf(submittedCount));
+            tvPendingSubmissions.setText(String.valueOf(facultyList.size() - submittedCount));
+            adapter.notifyDataSetChanged();
+            Log.d("DebugCheck", "Submitted count: " + submittedCount + ", Pending count: " + (facultyList.size() - submittedCount));
+
+            if (submissions == null || submissions.isEmpty()) {
+                Log.e("DebugCheck", "No Workdiary entries found for today by dayDate. Possible causes: wrong string format, no data for today.");
+            } else if (submittedCount == 0) {
+                Log.e("DebugCheck", "No faculty matched submissions for today. Possible causes: pointer mismatch, userId mismatch, or wrong user in Workdiary.");
+            } else {
+                Log.i("DebugCheck", "Matching and status update successful.");
             }
         });
     }
 
     private void openWorkDiary(String userId) {
+        Log.d("DebugCheck", "openWorkDiary called for userId: " + userId);
         // Implement navigation to work diary if needed
     }
 }
