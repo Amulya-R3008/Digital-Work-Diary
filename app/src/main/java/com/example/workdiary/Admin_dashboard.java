@@ -72,20 +72,20 @@ public class Admin_dashboard extends AppCompatActivity {
     private void fetchTodaySubmissionsByDayDate() {
         Log.d("DebugCheck", "fetchTodaySubmissionsByDayDate called");
 
-        // Correct format: "EEE dd-MM-yyyy" ensures leading zero for day and matches DB
+        // Format: "EEE dd-MM-yyyy" (e.g., "WED 09-07-2025")
         String today = new SimpleDateFormat("EEE dd-MM-yyyy", Locale.ENGLISH)
                 .format(new Date())
                 .toUpperCase()
                 .trim();
         Log.d("DebugCheck", "App generated dayDate: '" + today + "', length=" + today.length());
 
-        ParseQuery<ParseObject> diaryQuery = ParseQuery.getQuery("Workdiary");
-        diaryQuery.whereEqualTo("dayDate", today);
-        diaryQuery.include("user");
-        diaryQuery.setCachePolicy(ParseQuery.CachePolicy.NETWORK_ONLY);
+        ParseQuery<ParseObject> workdoneQuery = ParseQuery.getQuery("WorkdoneStatement");
+        workdoneQuery.whereEqualTo("dayDate", today);
+        workdoneQuery.include("user");
+        workdoneQuery.setCachePolicy(ParseQuery.CachePolicy.NETWORK_ONLY);
 
-        diaryQuery.findInBackground((submissions, e) -> {
-            Log.d("DebugCheck", "Workdiary query callback called");
+        workdoneQuery.findInBackground((submissions, e) -> {
+            Log.d("DebugCheck", "WorkdoneStatement query callback called");
             if (e != null) {
                 Log.e("DebugCheck", "Error fetching submissions: " + e.getMessage());
                 return;
@@ -101,7 +101,7 @@ public class Admin_dashboard extends AppCompatActivity {
                 for (ParseObject obj : submissions) {
                     ParseUser userPointer = obj.getParseUser("user");
                     String dbDayDate = obj.getString("dayDate");
-                    Log.d("DebugCheck", "Workdiary: dayDate='" + dbDayDate + "', length=" + (dbDayDate != null ? dbDayDate.length() : 0)
+                    Log.d("DebugCheck", "WorkdoneStatement: dayDate='" + dbDayDate + "', length=" + (dbDayDate != null ? dbDayDate.length() : 0)
                             + ", userId=" + (userPointer != null ? userPointer.getObjectId() : "null"));
                     if (userPointer != null) {
                         submittedIds.add(userPointer.getObjectId());
@@ -126,9 +126,9 @@ public class Admin_dashboard extends AppCompatActivity {
             Log.d("DebugCheck", "Submitted count: " + submittedCount + ", Pending count: " + (facultyList.size() - submittedCount));
 
             if (submissions == null || submissions.isEmpty()) {
-                Log.e("DebugCheck", "No Workdiary entries found for today by dayDate. Possible causes: wrong string format, no data for today.");
+                Log.e("DebugCheck", "No WorkdoneStatement entries found for today by dayDate. Possible causes: wrong string format, no data for today.");
             } else if (submittedCount == 0) {
-                Log.e("DebugCheck", "No faculty matched submissions for today. Possible causes: pointer mismatch, userId mismatch, or wrong user in Workdiary.");
+                Log.e("DebugCheck", "No faculty matched submissions for today. Possible causes: pointer mismatch, userId mismatch, or wrong user in WorkdoneStatement.");
             } else {
                 Log.i("DebugCheck", "Matching and status update successful.");
             }
