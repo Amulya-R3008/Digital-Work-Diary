@@ -1,34 +1,45 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="12dp"
-    android:background="#FFFFFF"
-    android:gravity="center_vertical">
+    android:layout_margin="8dp"
+    card_view:cardElevation="4dp"
+    card_view:cardCornerRadius="12dp">
 
-    <TextView
-        android:id="@+id/tvFacultyName"
-        android:layout_width="0dp"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="2"
-        android:text="Faculty Name"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:textColor="#212121" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="16dp">
 
-    <TextView
-        android:id="@+id/tvFacultyStatus"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="Pending"
-        android:textSize="14sp"
-        android:textColor="#FFFFFF"
-        android:background="#FFC107"
-        android:gravity="center"
-        android:padding="8dp"
-        android:clickable="true"
-        android:focusable="true" />
-</LinearLayout>
+        <TextView
+            android:id="@+id/tvFacultyName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Faculty Name"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#212121"/>
+
+        <Button
+            android:id="@+id/btnSubmitted"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Submitted"
+            android:textColor="@android:color/white"
+            android:backgroundTint="#4CAF50"
+            android:visibility="gone"/>
+
+        <Button
+            android:id="@+id/btnPending"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pending"
+            android:textColor="@android:color/white"
+            android:backgroundTint="#F44336"
+            android:visibility="gone"
+            android:layout_marginStart="8dp"/>
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

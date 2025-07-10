@@ -10,6 +10,7 @@ public class Faculty {
         this.status = status;
         this.userId = userId;
     }
+
     public String getName() { return name; }
     public String getStatus() { return status; }
     public String getUserId() { return userId; }

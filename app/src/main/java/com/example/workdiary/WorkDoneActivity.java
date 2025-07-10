@@ -2,7 +2,9 @@ package com.example.workdiary;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -26,10 +28,27 @@ public class WorkDoneActivity extends AppCompatActivity {
 
     private Map<String, Integer> portionToWeekMap = new HashMap<>();
 
+    // For admin viewing another user's diary
+    private String viewedUserId = null;
+    private ParseUser viewedUser = null;
+    private String facultyName = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_work_done);
+
+        // Faculty name display
+        TextView tvFacultyName = findViewById(R.id.tv_faculty);
+        facultyName = getIntent().getStringExtra("facultyName");
+        if (facultyName != null && !facultyName.isEmpty()) {
+            tvFacultyName.setText(facultyName);
+        } else {
+            ParseUser currentUser = ParseUser.getCurrentUser();
+            if (currentUser != null) {
+                tvFacultyName.setText(currentUser.getString("name"));
+            }
+        }
 
         RecyclerView rv = findViewById(R.id.rv_workdone);
         rv.setLayoutManager(new LinearLayoutManager(this));
@@ -40,6 +59,28 @@ public class WorkDoneActivity extends AppCompatActivity {
         Button btnEdit = findViewById(R.id.btn_edit);
         Button btnSave = findViewById(R.id.btn_save);
 
+        // Determine whose diary to show
+        viewedUserId = getIntent().getStringExtra("userId");
+        ParseUser currentUser = ParseUser.getCurrentUser();
+        if (viewedUserId != null && !"".equals(viewedUserId.trim())) {
+            viewedUser = (ParseUser) ParseUser.createWithoutData("_User", viewedUserId);
+        } else {
+            viewedUser = currentUser;
+        }
+
+        // Disable editing if admin is viewing another user's diary
+        if (viewedUserId != null && !"".equals(viewedUserId.trim())) {
+            btnEdit.setVisibility(View.GONE);
+            btnSave.setVisibility(View.GONE);
+            btnAddRow.setVisibility(View.GONE);
+        } else if (currentUser != null && "Admin".equalsIgnoreCase(currentUser.getUsername())) {
+            btnEdit.setVisibility(View.GONE);
+            btnSave.setVisibility(View.GONE);
+            btnAddRow.setVisibility(View.GONE);
+        } else {
+            btnAddRow.setVisibility(View.GONE);
+        }
+
         btnAddRow.setOnClickListener(v -> {
             if (isEditMode) {
                 rowList.add(new WorkdoneRow());
@@ -47,18 +88,16 @@ public class WorkDoneActivity extends AppCompatActivity {
             }
         });
 
-        btnAddRow.setVisibility(Button.GONE);
-
         btnEdit.setOnClickListener(v -> {
             isEditMode = true;
-            btnAddRow.setVisibility(Button.VISIBLE);
+            btnAddRow.setVisibility(View.VISIBLE);
             adapter.setEditMode(true);
             Toast.makeText(this, "Edit mode enabled", Toast.LENGTH_SHORT).show();
         });
 
         btnSave.setOnClickListener(v -> {
             isEditMode = false;
-            btnAddRow.setVisibility(Button.GONE);
+            btnAddRow.setVisibility(View.GONE);
             adapter.setEditMode(false);
             saveWorkdoneToBack4App();
         });
@@ -123,11 +162,10 @@ public class WorkDoneActivity extends AppCompatActivity {
     }
 
     private void loadOrFetchWorkdone() {
-        ParseUser currentUser = ParseUser.getCurrentUser();
-        if (currentUser == null) return;
+        if (viewedUser == null) return;
 
         ParseQuery<ParseObject> query = ParseQuery.getQuery("WorkdoneStatement");
-        query.whereEqualTo("user", currentUser);
+        query.whereEqualTo("user", viewedUser);
         query.orderByAscending("dayDate").addAscendingOrder("time");
 
         String todayDate = new SimpleDateFormat("EEE dd-MM-yyyy", Locale.getDefault()).format(new Date()).toUpperCase();
@@ -164,13 +202,12 @@ public class WorkDoneActivity extends AppCompatActivity {
     }
 
     private void saveWorkdoneToBack4App() {
-        ParseUser currentUser = ParseUser.getCurrentUser();
-        if (currentUser == null) return;
+        if (viewedUser == null) return;
 
         String todayDate = new SimpleDateFormat("EEE dd-MM-yyyy", Locale.getDefault()).format(new Date()).toUpperCase();
 
         ParseQuery<ParseObject> query = ParseQuery.getQuery("WorkdoneStatement");
-        query.whereEqualTo("user", currentUser);
+        query.whereEqualTo("user", viewedUser);
         query.whereEqualTo("dayDate", todayDate);
         query.findInBackground((list, e) -> {
             if (e == null && list != null) {
@@ -185,7 +222,7 @@ public class WorkDoneActivity extends AppCompatActivity {
             for (WorkdoneRow row : rowList) {
                 if (todayDate.equals(row.dayDate)) {
                     ParseObject workdoneObj = new ParseObject("WorkdoneStatement");
-                    workdoneObj.put("user", currentUser);
+                    workdoneObj.put("user", viewedUser);
                     workdoneObj.put("dayDate", row.dayDate);
                     workdoneObj.put("time", row.time);
                     workdoneObj.put("class", row.classField);
@@ -201,9 +238,8 @@ public class WorkDoneActivity extends AppCompatActivity {
     }
 
     private void fetchTimetableForTodayAndAssignPortion(Set<String> savedTodayKeys) {
-        ParseUser currentUser = ParseUser.getCurrentUser();
-        if (currentUser == null) return;
-        String userId = currentUser.getObjectId();
+        if (viewedUser == null) return;
+        String userId = viewedUser.getObjectId();
 
         Date now = new Date();
         String todayDay = new SimpleDateFormat("EEEE", Locale.getDefault()).format(now).toUpperCase();
@@ -245,8 +281,7 @@ public class WorkDoneActivity extends AppCompatActivity {
     }
 
     private void fetchAndAssignPortionsForAutoRows(String todayDate, List<WorkdoneRow> autoRows) {
-        ParseUser currentUser = ParseUser.getCurrentUser();
-        if (currentUser == null) return;
+        if (viewedUser == null) return;
 
         Map<String, List<WorkdoneRow>> subjectToAutoRows = new HashMap<>();
         for (WorkdoneRow wr : autoRows) {
@@ -263,7 +298,7 @@ public class WorkDoneActivity extends AppCompatActivity {
                     coveredPortions.add(portion);
                 }
             }
-            assignNextPortionsToAutoRows(currentUser, subject, subjectToAutoRows.get(subject), coveredPortions);
+            assignNextPortionsToAutoRows(viewedUser, subject, subjectToAutoRows.get(subject), coveredPortions);
         }
     }
 

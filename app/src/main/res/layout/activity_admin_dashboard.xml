@@ -1,176 +1,141 @@
-<?xml version="1.0" encoding="utf-8"?>
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/main"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8F9FA"
-    android:padding="16dp">
+    android:background="#F5F5F5">
 
+    <!-- Header: Welcome Admin & Logo -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="16dp"
+        android:background="#FFFFFF">
 
-        <!-- Header -->
         <TextView
-            android:id="@+id/tvWelcome"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Digital Work Diary\nWelcome, Admin!"
+            android:id="@+id/tvWelcomeAdmin"
+            android:layout_width="281dp"
+            android:layout_height="31dp"
+            android:layout_weight="1"
+            android:text="Welcome, Admin"
+            android:textColor="#222222"
             android:textSize="22sp"
-            android:textStyle="bold"
-            android:textColor="#212121"
-            android:paddingBottom="18dp" />
+            android:textStyle="bold" />
 
-        <!-- Dashboard Summary Cards -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:layout_marginBottom="24dp">
-
-            <!-- Total Faculty Card -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="110dp"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:background="@drawable/bg_card_blue"
-                android:gravity="center"
-                android:layout_marginEnd="8dp"
-                android:elevation="4dp">
-
-                <TextView
-                    android:id="@+id/tvTotalFaculty"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0"
-                    android:textColor="@color/black"
-                    android:textSize="28sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Total Faculty"
-                    android:textColor="@color/black"
-                    android:textSize="14sp" />
-            </LinearLayout>
-
-            <!-- Workdiary Submitted Card -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="110dp"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:background="@drawable/bg_card_green"
-                android:gravity="center"
-                android:layout_marginEnd="8dp"
-                android:elevation="4dp">
-
-                <TextView
-                    android:id="@+id/tvWorkdiarySubmitted"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0"
-                    android:textColor="@color/black"
-                    android:textSize="28sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Workdiary Submitted"
-                    android:textColor="@color/black"
-                    android:textSize="14sp" />
-            </LinearLayout>
-
-            <!-- Pending Card -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="110dp"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:background="@drawable/bg_card_red"
-                android:gravity="center"
-                android:elevation="4dp">
-
-                <TextView
-                    android:id="@+id/tvPendingSubmissions"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0"
-                    android:textColor="@color/black"
-                    android:textSize="28sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Pending"
-                    android:textColor="@color/black"
-                    android:textSize="14sp" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- Faculty List Header -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Faculty List"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="#212121"
-            android:paddingBottom="8dp" />
-
-        <!-- Faculty RecyclerView -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvFacultyList"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="#FFFFFF"
-            android:padding="8dp"
-            android:layout_marginBottom="16dp"
-            android:elevation="2dp" />
-
-        <!-- Pending Submission Alert Box -->
-        <LinearLayout
-            android:id="@+id/layoutPendingAlert"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="#FFEBEE"
-            android:padding="16dp"
-            android:layout_marginTop="8dp"
-            android:visibility="gone">
-
-            <TextView
-                android:id="@+id/tvPendingAlert"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="⚠ Pending Submission Alert"
-                android:textStyle="bold"
-                android:textColor="#B71C1C"
-                android:paddingBottom="8dp" />
-
-            <TextView
-                android:id="@+id/tvPendingAlertMsg"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Some faculty have not submitted today's work diary."
-                android:textColor="#B71C1C"
-                android:paddingBottom="12dp" />
-
-            <Button
-                android:id="@+id/btnSendReminder"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:backgroundTint="#D32F2F"
-                android:text="Send Reminder to All"
-                android:textColor="#FFFFFF" />
-        </LinearLayout>
-
+        <ImageView
+            android:id="@+id/imgAdminLogo"
+            android:layout_width="48dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="16dp"
+            android:background="@drawable/rv_logo"
+            android:scaleType="centerCrop"
+            android:src="@drawable/rv_logo" />
     </LinearLayout>
-</ScrollView>
+
+    <!-- Dashboard Summary -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:padding="12dp"
+        android:background="#FFFFFF">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:src="@drawable/ic_people"
+                android:layout_width="32dp"
+                android:layout_height="32dp"/>
+            <TextView
+                android:id="@+id/tvTotalFaculty"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0"
+                android:textSize="20sp"
+                android:textStyle="bold"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Total Faculty"
+                android:textSize="12sp"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:src="@drawable/ic_check_circle"
+                android:layout_width="32dp"
+                android:layout_height="32dp"/>
+            <TextView
+                android:id="@+id/tvWorkdiarySubmitted"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0"
+                android:textSize="20sp"
+                android:textStyle="bold"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Submitted"
+                android:textSize="12sp"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:src="@drawable/ic_pending"
+                android:layout_width="32dp"
+                android:layout_height="32dp"/>
+            <TextView
+                android:id="@+id/tvPendingSubmissions"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0"
+                android:textSize="20sp"
+                android:textStyle="bold"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Pending"
+                android:textSize="12sp"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Faculty List Heading -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Faculty Name"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="#444444"
+        android:paddingStart="20dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="4dp"/>
+
+    <!-- Faculty List -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvFacultyList"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="8dp"
+        android:clipToPadding="false"/>
+</LinearLayout>

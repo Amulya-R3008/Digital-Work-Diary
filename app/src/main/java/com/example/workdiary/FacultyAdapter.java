@@ -3,6 +3,7 @@ package com.example.workdiary;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -32,8 +33,17 @@ public class FacultyAdapter extends RecyclerView.Adapter<FacultyAdapter.FacultyV
     public void onBindViewHolder(@NonNull FacultyViewHolder holder, int position) {
         Faculty faculty = facultyList.get(position);
         holder.tvFacultyName.setText(faculty.getName());
-        holder.tvFacultyStatus.setText(faculty.getStatus());
-        holder.tvFacultyStatus.setOnClickListener(v -> listener.onStatusClick(faculty));
+
+        if ("Submitted".equalsIgnoreCase(faculty.getStatus())) {
+            holder.btnSubmitted.setVisibility(View.VISIBLE);
+            holder.btnPending.setVisibility(View.GONE);
+        } else {
+            holder.btnSubmitted.setVisibility(View.GONE);
+            holder.btnPending.setVisibility(View.VISIBLE);
+        }
+
+        holder.btnSubmitted.setOnClickListener(v -> listener.onStatusClick(faculty));
+        holder.btnPending.setOnClickListener(v -> listener.onStatusClick(faculty));
     }
 
     @Override
@@ -42,11 +52,13 @@ public class FacultyAdapter extends RecyclerView.Adapter<FacultyAdapter.FacultyV
     }
 
     static class FacultyViewHolder extends RecyclerView.ViewHolder {
-        TextView tvFacultyName, tvFacultyStatus;
+        TextView tvFacultyName;
+        Button btnSubmitted, btnPending;
         FacultyViewHolder(View itemView) {
             super(itemView);
             tvFacultyName = itemView.findViewById(R.id.tvFacultyName);
-            tvFacultyStatus = itemView.findViewById(R.id.tvFacultyStatus);
+            btnSubmitted = itemView.findViewById(R.id.btnSubmitted);
+            btnPending = itemView.findViewById(R.id.btnPending);
         }
     }
 }
